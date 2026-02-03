@@ -14,11 +14,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   session: { strategy: "jwt" },
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   callbacks: {
     async signIn({ profile }) {
       const email = (profile?.email || "").toLowerCase();
       if (!email) return false;
-      if (allowedEmails.length === 0) return true; // allow all if not configured
+
+      // Safe-by-default:
+      // - In production, require an allowlist.
+      // - In dev, allow all if not configured.
+      if (allowedEmails.length === 0) {
+        return process.env.NODE_ENV !== "production";
+      }
+
       return allowedEmails.includes(email);
     },
   },

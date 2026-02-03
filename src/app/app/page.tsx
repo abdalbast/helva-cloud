@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SignOutButton } from "./signout-button";
 
 export default async function AppHome() {
   const session = await auth();
@@ -15,12 +16,7 @@ export default async function AppHome() {
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            <Link
-              href="/api/auth/signout"
-              className="rounded-md border px-3 py-2 text-sm hover:bg-foreground/5"
-            >
-              Sign out
-            </Link>
+            <SignOutButton />
           </div>
         </header>
 
