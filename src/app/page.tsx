@@ -36,18 +36,34 @@ export default function Home() {
         </section>
 
         <section id="tools" className="mt-20">
-          <h2 className="text-xl font-semibold">Tools</h2>
+          <h2 className="text-xl font-semibold">Helva business tools</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border p-4">
-              <div className="font-medium">OpenClaw Usage</div>
-              <div className="mt-1 text-sm text-foreground/70">
-                Cursor-style usage breakdown (tokens/cost over time).
-              </div>
-            </div>
-            <div className="rounded-lg border p-4">
+            <a
+              href="https://social.helva.cloud"
+              className="rounded-lg border p-4 hover:bg-foreground/5"
+            >
               <div className="font-medium">Social Scheduler</div>
               <div className="mt-1 text-sm text-foreground/70">
-                Buffer-like publish queue & calendar.
+                Publish queue, calendar, and campaign scheduling.
+              </div>
+              <div className="mt-2 text-sm underline">Open</div>
+            </a>
+
+            <a
+              href="https://meeting.helva.cloud"
+              className="rounded-lg border p-4 hover:bg-foreground/5"
+            >
+              <div className="font-medium">MeetingMind</div>
+              <div className="mt-1 text-sm text-foreground/70">
+                Meeting capture + summaries (landing page for now).
+              </div>
+              <div className="mt-2 text-sm underline">Open</div>
+            </a>
+
+            <div className="rounded-lg border p-4">
+              <div className="font-medium">More tools coming</div>
+              <div className="mt-1 text-sm text-foreground/70">
+                This page is the launchpad for everything we ship under helva.cloud.
               </div>
             </div>
           </div>
