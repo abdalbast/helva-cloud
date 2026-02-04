@@ -30,3 +30,5 @@ HELVA_INGEST_URL="https://helva.cloud/api/ingest/openclaw" \
 HELVA_COLLECTOR_TOKEN="..." \
 node collector/openclaw-collector.mjs
 ```
+
+<!-- deploy-check: 2026-02-04T13:41:03Z -->
