@@ -58,6 +58,81 @@ function exists(relPath) {
   return fs.existsSync(path.join(cwd, relPath));
 }
 
+function readText(relPath) {
+  return fs.readFileSync(path.join(cwd, relPath), "utf8");
+}
+
+function parseLlmTxtCanonicalRoutes(content) {
+  const lines = content.split(/\r?\n/);
+  const sectionStart = lines.findIndex((line) => line.trim() === "CANONICAL_PAGES");
+  if (sectionStart === -1) {
+    throw new Error("CANONICAL_PAGES section not found in public/llm.txt");
+  }
+
+  const routes = [];
+  for (let i = sectionStart + 1; i < lines.length; i += 1) {
+    const trimmed = lines[i].trim();
+    if (!trimmed) continue;
+    if (/^[A-Z_]+$/.test(trimmed)) break;
+    if (!trimmed.startsWith("- ")) continue;
+    const item = trimmed.slice(2);
+    const route = item.split(/\s+/)[0];
+    if (route.startsWith("/")) {
+      routes.push(route);
+    }
+  }
+  return routes;
+}
+
+function parseLlmTxtScalar(content, sectionName) {
+  const lines = content.split(/\r?\n/);
+  const idx = lines.findIndex((line) => line.trim() === sectionName);
+  if (idx === -1) return null;
+  for (let i = idx + 1; i < lines.length; i += 1) {
+    const trimmed = lines[i].trim();
+    if (!trimmed) continue;
+    if (/^[A-Z_]+$/.test(trimmed)) return null;
+    if (trimmed.startsWith("- ")) return trimmed.slice(2).trim();
+  }
+  return null;
+}
+
+function parseSitemapRoutes(content) {
+  const routesMatch = content.match(/const routes = \[([\s\S]*?)\]\s+as const;/);
+  if (!routesMatch) {
+    throw new Error("could not find `const routes = [...] as const` in src/app/sitemap.ts");
+  }
+  return [...routesMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+}
+
+function parseExportedStringConstant(content, name) {
+  const match = content.match(new RegExp(`export const ${name} = "([^"]+)";`));
+  return match ? match[1] : null;
+}
+
+function routeToExpectedFile(route) {
+  if (route === "/") return "src/app/page.tsx";
+  if (route === "/llm.txt") return "public/llm.txt";
+  const segments = route.slice(1).split("/");
+  return path.join("src/app", ...segments, "page.tsx");
+}
+
+function compareLists(label, leftName, left, rightName, right) {
+  const leftOnly = left.filter((item) => !right.includes(item));
+  const rightOnly = right.filter((item) => !left.includes(item));
+  if (leftOnly.length === 0 && rightOnly.length === 0) {
+    ok(`${label} match (${left.length} items)`);
+    return;
+  }
+
+  if (leftOnly.length) {
+    err(`${label}: present only in ${leftName}: ${leftOnly.join(", ")}`);
+  }
+  if (rightOnly.length) {
+    err(`${label}: present only in ${rightName}: ${rightOnly.join(", ")}`);
+  }
+}
+
 function main() {
   console.log("Helva Cloud health check\n");
 
@@ -146,7 +221,90 @@ function main() {
   if (exists("src/app/api/auth/[...nextauth]/route.ts")) ok("auth route found");
   else err("auth route missing");
 
+  runLlmDocsParityChecks();
+
   return finish();
+}
+
+function runLlmDocsParityChecks() {
+  if (!exists("public/llm.txt")) {
+    err("public/llm.txt missing");
+    return;
+  }
+  if (!exists("src/app/sitemap.ts")) {
+    err("src/app/sitemap.ts missing");
+    return;
+  }
+  if (!exists("src/lib/site.ts")) {
+    err("src/lib/site.ts missing");
+    return;
+  }
+
+  let llmContent;
+  let sitemapContent;
+  let siteContent;
+  try {
+    llmContent = readText("public/llm.txt");
+    sitemapContent = readText("src/app/sitemap.ts");
+    siteContent = readText("src/lib/site.ts");
+  } catch (e) {
+    err(`failed to read docs parity files: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  }
+
+  let llmRoutes = [];
+  let sitemapRoutes = [];
+  try {
+    llmRoutes = parseLlmTxtCanonicalRoutes(llmContent);
+    if (llmRoutes.length === 0) {
+      err("public/llm.txt CANONICAL_PAGES section has no routes");
+    } else {
+      ok(`public/llm.txt CANONICAL_PAGES parsed (${llmRoutes.length} routes)`);
+    }
+  } catch (e) {
+    err(e instanceof Error ? e.message : String(e));
+  }
+
+  try {
+    sitemapRoutes = parseSitemapRoutes(sitemapContent);
+    ok(`src/app/sitemap.ts routes parsed (${sitemapRoutes.length} routes)`);
+  } catch (e) {
+    err(e instanceof Error ? e.message : String(e));
+  }
+
+  if (llmRoutes.length && sitemapRoutes.length) {
+    compareLists("llm.txt canonical routes vs sitemap routes", "llm.txt", llmRoutes, "sitemap.ts", sitemapRoutes);
+  }
+
+  for (const route of llmRoutes) {
+    const expectedFile = routeToExpectedFile(route);
+    if (exists(expectedFile)) {
+      ok(`canonical route target exists (${route} -> ${expectedFile})`);
+    } else {
+      err(`canonical route target missing (${route} -> ${expectedFile})`);
+    }
+  }
+
+  const llmLastUpdated = parseLlmTxtScalar(llmContent, "LAST_UPDATED");
+  const llmVersion = parseLlmTxtScalar(llmContent, "VERSION");
+  const siteLastUpdated = parseExportedStringConstant(siteContent, "DOCS_LAST_UPDATED");
+  const siteVersion = parseExportedStringConstant(siteContent, "DOCS_VERSION");
+
+  if (!llmLastUpdated) err("public/llm.txt LAST_UPDATED value missing");
+  else ok(`public/llm.txt LAST_UPDATED found (${llmLastUpdated})`);
+  if (!siteLastUpdated) err("src/lib/site.ts DOCS_LAST_UPDATED missing");
+  if (llmLastUpdated && siteLastUpdated) {
+    if (llmLastUpdated === siteLastUpdated) ok("LAST_UPDATED matches src/lib/site.ts");
+    else err(`LAST_UPDATED mismatch (llm.txt=${llmLastUpdated}, src/lib/site.ts=${siteLastUpdated})`);
+  }
+
+  if (!llmVersion) err("public/llm.txt VERSION value missing");
+  else ok(`public/llm.txt VERSION found (${llmVersion})`);
+  if (!siteVersion) err("src/lib/site.ts DOCS_VERSION missing");
+  if (llmVersion && siteVersion) {
+    if (llmVersion === siteVersion) ok("VERSION matches src/lib/site.ts");
+    else err(`VERSION mismatch (llm.txt=${llmVersion}, src/lib/site.ts=${siteVersion})`);
+  }
 }
 
 function finish() {
