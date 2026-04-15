@@ -27,7 +27,11 @@ export const count = query({
 export const get = query({
   args: { id: v.id("companies") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
+    const company = await ctx.db.get(id);
+    if (!company || company.userEmail !== userEmail) return null;
+    return company;
   },
 });
 

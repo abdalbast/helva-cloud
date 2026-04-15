@@ -44,5 +44,5 @@ export async function POST(req: Request) {
   }
 
   // Usage events are no longer stored — acknowledge only.
-  return NextResponse.json({ ok: true, inserted: parsed.data.events.length });
+  return NextResponse.json({ ok: true, acknowledged: parsed.data.events.length });
 }

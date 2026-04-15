@@ -86,7 +86,11 @@ export const stats = query({
 export const get = query({
   args: { id: v.id("partners") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
+    const partner = await ctx.db.get(id);
+    if (!partner || partner.userEmail !== userEmail) return null;
+    return partner;
   },
 });
 

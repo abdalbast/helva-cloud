@@ -3,6 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { timingSafeEqualString } from "@/lib/timing-safe";
 
 type ContactInput = {
   firstName: string;
@@ -28,13 +29,35 @@ export async function POST(req: Request) {
   const headerEmail = req.headers.get("X-Import-Email");
   const headerSecret = req.headers.get("X-Import-Secret");
   const adminSecret = process.env.ADMIN_IMPORT_SECRET;
+  const hasAdminHeaders = headerEmail !== null || headerSecret !== null;
+
+  if (hasAdminHeaders) {
+    if (!headerEmail || !headerSecret) {
+      return Response.json(
+        { error: "Admin import requires both X-Import-Email and X-Import-Secret" },
+        { status: 400 },
+      );
+    }
+    if (!adminSecret) {
+      return Response.json(
+        { error: "Server admin import is not configured" },
+        { status: 500 },
+      );
+    }
+  }
 
   const isAdminRequest =
-    !!headerEmail && !!headerSecret && !!adminSecret && headerSecret === adminSecret;
+    !!headerEmail &&
+    !!headerSecret &&
+    !!adminSecret &&
+    timingSafeEqualString(headerSecret, adminSecret);
 
   let token: string | undefined;
 
   if (!isAdminRequest) {
+    if (hasAdminHeaders) {
+      return new Response(null, { status: 401 });
+    }
     // The client can remain authenticated via Convex local storage even when the
     // server-side auth cookie is missing or stale, so accept the same-origin
     // bearer token as a fallback for import requests.
@@ -42,9 +65,22 @@ export async function POST(req: Request) {
     if (!token) return new Response(null, { status: 401 });
   }
 
-  const { contacts }: { contacts: ContactInput[] } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-  if (!Array.isArray(contacts) || contacts.length === 0) {
+  const contacts = (body as { contacts?: unknown } | null)?.contacts;
+
+  if (!Array.isArray(contacts)) {
+    return Response.json({ error: "`contacts` must be an array" }, { status: 400 });
+  }
+
+  const contactsInput = contacts as ContactInput[];
+
+  if (contactsInput.length === 0) {
     return Response.json({ created: 0, skipped: 0, failed: 0 });
   }
 
@@ -54,11 +90,11 @@ export async function POST(req: Request) {
 
   if (isAdminRequest) {
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-    const adminArgs = { adminSecret: adminSecret!, userEmail: headerEmail! };
+    const adminArgs = { adminSecret: headerSecret!, userEmail: headerEmail! };
 
     const [existingCompanies, existingContacts] = await Promise.all([
-      convex.mutation(api.adminImport.listCompanies, adminArgs),
-      convex.mutation(api.adminImport.listContacts, adminArgs),
+      convex.action(api.adminImport.listCompanies, adminArgs),
+      convex.action(api.adminImport.listContacts, adminArgs),
     ]);
 
     const existingEmailSet = new Set(
@@ -68,13 +104,13 @@ export async function POST(req: Request) {
       existingCompanies.map((c) => [c.name.toLowerCase(), c._id]),
     );
 
-    for (const contact of contacts) {
+    for (const contact of contactsInput) {
       try {
         let companyId: Id<"companies"> | undefined;
         if (contact.company) {
           const key = contact.company.toLowerCase();
           if (!companyCache.has(key)) {
-            const id = await convex.mutation(api.adminImport.createCompany, {
+            const id = await convex.action(api.adminImport.createCompany, {
               ...adminArgs,
               name: contact.company,
             });
@@ -86,7 +122,7 @@ export async function POST(req: Request) {
           skipped++;
           continue;
         }
-        await convex.mutation(api.adminImport.createContact, {
+        await convex.action(api.adminImport.createContact, {
           ...adminArgs,
           firstName: contact.firstName,
           lastName: contact.lastName,
@@ -114,7 +150,7 @@ export async function POST(req: Request) {
       existingCompanies.map((c) => [c.name.toLowerCase(), c._id]),
     );
 
-    for (const contact of contacts) {
+    for (const contact of contactsInput) {
       try {
         let companyId: Id<"companies"> | undefined;
         if (contact.company) {

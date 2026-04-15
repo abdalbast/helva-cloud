@@ -75,7 +75,8 @@ export default defineSchema({
   })
     .index("by_user", ["userEmail"])
     .index("by_user_and_type", ["userEmail", "type"])
-    .searchIndex("search_firstName", { searchField: "firstName", filterFields: ["userEmail"] }),
+    .searchIndex("search_firstName", { searchField: "firstName", filterFields: ["userEmail"] })
+    .searchIndex("search_lastName", { searchField: "lastName", filterFields: ["userEmail"] }),
 
   activities: defineTable({
     userEmail: v.string(),
@@ -149,6 +150,7 @@ export default defineSchema({
     position: v.number(),
   })
     .index("by_user", ["userEmail"])
+    .index("by_user_and_project", ["userEmail", "projectId"])
     .index("by_project", ["projectId"])
     .searchIndex("search_title", { searchField: "title", filterFields: ["userEmail"] }),
 

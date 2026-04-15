@@ -14,7 +14,11 @@ export const list = query({
 export const get = query({
   args: { id: v.id("meetings") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
+    const meeting = await ctx.db.get(id);
+    if (!meeting || meeting.userEmail !== userEmail) return null;
+    return meeting;
   },
 });
 

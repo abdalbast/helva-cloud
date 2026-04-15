@@ -35,7 +35,16 @@ export const openCount = query({
 export const listByProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, { projectId }) => {
-    return await ctx.db.query("tasks").withIndex("by_project", (q) => q.eq("projectId", projectId)).take(200);
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return [];
+    const project = await ctx.db.get(projectId);
+    if (!project || project.userEmail !== userEmail) return [];
+    return await ctx.db
+      .query("tasks")
+      .withIndex("by_user_and_project", (q) =>
+        q.eq("userEmail", userEmail).eq("projectId", projectId),
+      )
+      .take(200);
   },
 });
 

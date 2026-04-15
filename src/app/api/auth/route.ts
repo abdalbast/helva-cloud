@@ -99,10 +99,15 @@ export async function POST(request: NextRequest) {
       );
 
       if (result.redirect !== undefined) {
+        if (result.verifier === undefined) {
+          const response = json({ error: "Missing OAuth verifier" }, 400);
+          setAuthCookies(request, response, null);
+          return response;
+        }
         const response = json({ redirect: result.redirect });
         response.cookies.set(
           names.verifier,
-          result.verifier!,
+          result.verifier,
           cookieOptions(request),
         );
         return response;

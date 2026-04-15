@@ -38,12 +38,14 @@ export const count = query({
 export const get = query({
   args: { id: v.id("contacts") },
   handler: async (ctx, { id }) => {
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
     const contact = await ctx.db.get(id);
-    if (!contact) return null;
+    if (!contact || contact.userEmail !== userEmail) return null;
     let companyName: string | null = null;
     if (contact.companyId) {
       const company = await ctx.db.get(contact.companyId);
-      companyName = company?.name ?? null;
+      companyName = company?.userEmail === userEmail ? company.name : null;
     }
     return { ...contact, companyName };
   },
