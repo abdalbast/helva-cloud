@@ -1,9 +1,7 @@
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
-import { ConvexHttpClient } from "convex/browser";
 import { fetchAction } from "convex/nextjs";
 import { z } from "zod";
 import { api } from "convex/_generated/api";
-import type { Id } from "convex/_generated/dataModel";
 import { timingSafeEqualString } from "@/lib/timing-safe";
 
 const ContactInputSchema = z.object({
@@ -20,8 +18,6 @@ const ContactInputSchema = z.object({
 const BodySchema = z.object({
   contacts: z.array(ContactInputSchema),
 });
-
-type ContactInput = z.infer<typeof ContactInputSchema>;
 
 function getBearerToken(req: Request) {
   const authorization = req.headers.get("authorization");
@@ -41,6 +37,13 @@ function isImportAuthError(error: unknown) {
   return (
     message.includes("Unauthenticated") ||
     message.includes("Authenticated identity is missing an email")
+  );
+}
+
+function convexSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_CONVEX_URL!.replace(
+    ".convex.cloud",
+    ".convex.site",
   );
 }
 
@@ -77,9 +80,6 @@ export async function POST(req: Request) {
     if (hasAdminHeaders) {
       return unauthorizedResponse();
     }
-    // The client can remain authenticated via Convex local storage even when the
-    // server-side auth cookie is missing or stale, so accept the same-origin
-    // bearer token as a fallback for import requests.
     token = getBearerToken(req) ?? (await convexAuthNextjsToken());
     if (!token) return unauthorizedResponse();
   }
@@ -90,69 +90,32 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const contactsInput: ContactInput[] = parsed.data.contacts;
-
-  if (contactsInput.length === 0) {
+  if (parsed.data.contacts.length === 0) {
     return Response.json({ created: 0, skipped: 0, failed: 0 });
   }
 
-  let created = 0;
-  let skipped = 0;
-  let failed = 0;
-
   if (isAdminRequest) {
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-    const adminArgs = { adminSecret: headerSecret!, userEmail: headerEmail! };
+    const res = await fetch(`${convexSiteUrl()}/api/admin-import`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Import-Email": headerEmail!,
+        "X-Import-Secret": headerSecret!,
+      },
+      body: JSON.stringify({ contacts: parsed.data.contacts }),
+    });
 
-    const [existingCompanies, existingContacts] = await Promise.all([
-      convex.action(api.adminImport.listCompanies, adminArgs),
-      convex.action(api.adminImport.listContacts, adminArgs),
-    ]);
-
-    const existingEmailSet = new Set(
-      existingContacts.map((c) => c.email?.toLowerCase()).filter(Boolean),
-    );
-    const companyCache = new Map<string, Id<"companies">>(
-      existingCompanies.map((c) => [c.name.toLowerCase(), c._id]),
-    );
-
-    for (const contact of contactsInput) {
-      try {
-        let companyId: Id<"companies"> | undefined;
-        if (contact.company) {
-          const key = contact.company.toLowerCase();
-          if (!companyCache.has(key)) {
-            const id = await convex.action(api.adminImport.createCompany, {
-              ...adminArgs,
-              name: contact.company,
-            });
-            companyCache.set(key, id);
-          }
-          companyId = companyCache.get(key);
-        }
-        if (contact.email && existingEmailSet.has(contact.email.toLowerCase())) {
-          skipped++;
-          continue;
-        }
-        await convex.action(api.adminImport.createContact, {
-          ...adminArgs,
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-          email: contact.email ?? null,
-          companyId: companyId ?? null,
-          country: contact.country ?? null,
-        });
-        if (contact.email) existingEmailSet.add(contact.email.toLowerCase());
-        created++;
-      } catch {
-        failed++;
-      }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Import failed" }));
+      return Response.json(err, { status: res.status });
     }
+
+    return Response.json(await res.json());
   } else {
     try {
       const result = await fetchAction(
         api.importContacts.importMany,
-        { contacts: contactsInput },
+        { contacts: parsed.data.contacts },
         { token },
       );
       return Response.json(result);
@@ -163,6 +126,4 @@ export async function POST(req: Request) {
       return Response.json({ error: "Import failed" }, { status: 500 });
     }
   }
-
-  return Response.json({ created, skipped, failed });
 }

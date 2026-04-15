@@ -1,81 +1,86 @@
-"use node";
-
 import { v } from "convex/values";
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import type { Doc, Id } from "./_generated/dataModel";
-import { timingSafeEqualString } from "../src/lib/timing-safe";
+import type { Id } from "./_generated/dataModel";
 
-function requireAdminImportSecret(adminSecret: string) {
-  const configuredSecret = process.env.ADMIN_IMPORT_SECRET;
-  if (!configuredSecret) {
-    throw new Error("ADMIN_IMPORT_SECRET is not configured");
-  }
-  if (!timingSafeEqualString(adminSecret, configuredSecret)) {
-    throw new Error("Unauthorized");
-  }
-}
-
-export const createCompany = action({
-  args: {
-    adminSecret: v.string(),
-    userEmail: v.string(),
-    name: v.string(),
-  },
-  handler: async (ctx, args): Promise<Id<"companies">> => {
-    requireAdminImportSecret(args.adminSecret);
-    return await ctx.runMutation(internal.adminImportInternal.createCompany, {
-      userEmail: args.userEmail,
-      name: args.name,
-    });
-  },
+const contactImportValidator = v.object({
+  firstName: v.string(),
+  lastName: v.string(),
+  email: v.optional(v.string()),
+  phone: v.optional(v.string()),
+  role: v.optional(v.string()),
+  company: v.optional(v.string()),
+  country: v.optional(v.string()),
+  notes: v.optional(v.string()),
 });
 
-export const createContact = action({
+export const importBatch = internalAction({
   args: {
-    adminSecret: v.string(),
     userEmail: v.string(),
-    firstName: v.string(),
-    lastName: v.string(),
-    email: v.union(v.string(), v.null()),
-    companyId: v.union(v.id("companies"), v.null()),
-    country: v.union(v.string(), v.null()),
+    contacts: v.array(contactImportValidator),
   },
-  handler: async (ctx, args): Promise<Id<"contacts">> => {
-    requireAdminImportSecret(args.adminSecret);
-    return await ctx.runMutation(internal.adminImportInternal.createContact, {
-      userEmail: args.userEmail,
-      firstName: args.firstName,
-      lastName: args.lastName,
-      email: args.email,
-      companyId: args.companyId,
-      country: args.country,
-    });
-  },
-});
+  handler: async (
+    ctx,
+    { userEmail, contacts },
+  ): Promise<{ created: number; skipped: number; failed: number }> => {
+    if (contacts.length === 0) {
+      return { created: 0, skipped: 0, failed: 0 };
+    }
 
-export const listCompanies = action({
-  args: {
-    adminSecret: v.string(),
-    userEmail: v.string(),
-  },
-  handler: async (ctx, args): Promise<Doc<"companies">[]> => {
-    requireAdminImportSecret(args.adminSecret);
-    return await ctx.runQuery(internal.adminImportInternal.listCompanies, {
-      userEmail: args.userEmail,
-    });
-  },
-});
+    const [existingCompanies, existingContacts] = await Promise.all([
+      ctx.runQuery(internal.adminImportInternal.listCompanies, { userEmail }),
+      ctx.runQuery(internal.adminImportInternal.listContacts, { userEmail }),
+    ]);
 
-export const listContacts = action({
-  args: {
-    adminSecret: v.string(),
-    userEmail: v.string(),
-  },
-  handler: async (ctx, args): Promise<Doc<"contacts">[]> => {
-    requireAdminImportSecret(args.adminSecret);
-    return await ctx.runQuery(internal.adminImportInternal.listContacts, {
-      userEmail: args.userEmail,
-    });
+    const existingEmailSet = new Set(
+      existingContacts
+        .map((c) => c.email?.toLowerCase())
+        .filter(Boolean),
+    );
+    const companyCache = new Map<string, Id<"companies">>(
+      existingCompanies.map((c) => [c.name.toLowerCase(), c._id]),
+    );
+
+    let created = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const contact of contacts) {
+      try {
+        let companyId: Id<"companies"> | undefined;
+        if (contact.company) {
+          const key = contact.company.toLowerCase();
+          if (!companyCache.has(key)) {
+            const id = await ctx.runMutation(
+              internal.adminImportInternal.createCompany,
+              { userEmail, name: contact.company },
+            );
+            companyCache.set(key, id);
+          }
+          companyId = companyCache.get(key);
+        }
+        if (
+          contact.email &&
+          existingEmailSet.has(contact.email.toLowerCase())
+        ) {
+          skipped++;
+          continue;
+        }
+        await ctx.runMutation(internal.adminImportInternal.createContact, {
+          userEmail,
+          firstName: contact.firstName,
+          lastName: contact.lastName,
+          email: contact.email ?? null,
+          companyId: companyId ?? null,
+          country: contact.country ?? null,
+        });
+        if (contact.email) existingEmailSet.add(contact.email.toLowerCase());
+        created++;
+      } catch {
+        failed++;
+      }
+    }
+
+    return { created, skipped, failed };
   },
 });

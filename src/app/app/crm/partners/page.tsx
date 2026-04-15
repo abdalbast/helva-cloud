@@ -82,21 +82,27 @@ const baseColumns: Column<Partner>[] = [
     key: "type",
     label: "Type",
     sortable: true,
-    render: (p) => (
-      <span className={`inline-block rounded-[2px] px-2 py-0.5 text-caption ${typeColor[p.type] ?? ""}`}>
-        {p.type.charAt(0).toUpperCase() + p.type.slice(1)}
-      </span>
-    ),
+    render: (p) => {
+      const ptype = p.type ?? "partner";
+      return (
+        <span className={`inline-block rounded-[2px] px-2 py-0.5 text-caption ${typeColor[ptype] ?? ""}`}>
+          {ptype.charAt(0).toUpperCase() + ptype.slice(1)}
+        </span>
+      );
+    },
   },
   {
     key: "status",
     label: "Status",
     sortable: true,
-    render: (p) => (
-      <span className={`text-caption ${p.status === "active" ? "text-sunshine-700" : p.status === "inactive" ? "text-foreground/40" : "text-foreground/70"}`}>
-        {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
-      </span>
-    ),
+    render: (p) => {
+      const status = p.status ?? "prospective";
+      return (
+        <span className={`text-caption ${status === "active" ? "text-sunshine-700" : status === "inactive" ? "text-foreground/40" : "text-foreground/70"}`}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+      );
+    },
   },
   {
     key: "commissionRate",
@@ -119,7 +125,7 @@ export default function PartnersPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState<PartnerFormValues>({ firstName: "", lastName: "", type: "affiliate" });
+  const [formValues, setFormValues] = useState<PartnerFormValues>({ firstName: "", lastName: "", type: "affiliate", status: "prospective" });
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +133,7 @@ export default function PartnersPage() {
 
   useEffect(() => {
     if (searchParams.get("action") === "new") {
-      setFormValues({ firstName: "", lastName: "", type: "affiliate" });
+      setFormValues({ firstName: "", lastName: "", type: "affiliate", status: "prospective" });
       setEditId(null);
       setShowForm(true);
       window.history.replaceState(null, "", window.location.pathname);
@@ -165,7 +171,7 @@ export default function PartnersPage() {
         phone: formValues.phone || undefined,
         company: formValues.company || undefined,
         type: formValues.type,
-        status: formValues.status && isPartnerStatus(formValues.status) ? formValues.status : undefined,
+        status: formValues.status && isPartnerStatus(formValues.status) ? formValues.status : "prospective",
         commissionRate: parsedCommissionRate,
         notes: formValues.notes || undefined,
       };
@@ -224,7 +230,7 @@ export default function PartnersPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 mt-1">
           <h1 className="text-card-title">Partners</h1>
           <button
-            onClick={() => { setFormValues({ firstName: "", lastName: "", type: "affiliate" }); setEditId(null); setShowForm(true); }}
+            onClick={() => { setFormValues({ firstName: "", lastName: "", type: "affiliate", status: "prospective" }); setEditId(null); setShowForm(true); }}
             className="flex items-center gap-1 rounded-[2px] bg-mistral-orange px-3 py-1.5 text-sm text-surface-pure hover:bg-mistral-flame active:scale-[0.98] transition"
           >
             <Plus className="h-4 w-4" /> Add Partner

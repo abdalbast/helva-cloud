@@ -3,7 +3,7 @@ import {
   createRouteMatcher,
   nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 const isSignInRoute = createRouteMatcher(["/sign-in"]);
 
@@ -66,7 +66,17 @@ function renderCanonicalLocalhostPage(target: string) {
   );
 }
 
-export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+const authMiddleware = convexAuthNextjsMiddleware(
+  async (request, { convexAuth }) => {
+    if (isSignInRoute(request) && (await convexAuth.isAuthenticated())) {
+      return nextjsMiddlewareRedirect(request, "/app");
+    }
+
+    return NextResponse.next();
+  },
+);
+
+export default async function middleware(request: NextRequest, event: NextFetchEvent) {
   const host = parseHostHeader(request.headers.get("host"));
 
   if (host?.hostname === "www.helva.cloud") {
@@ -90,12 +100,13 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     );
   }
 
-  if (isSignInRoute(request) && (await convexAuth.isAuthenticated())) {
-    return nextjsMiddlewareRedirect(request, "/app");
+  try {
+    return await authMiddleware(request, event);
+  } catch (error) {
+    console.error("[middleware] auth layer error, falling back to guest:", error);
+    return NextResponse.next();
   }
-
-  return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
