@@ -1,11 +1,12 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { useConvexAuth, useAction, useQuery } from "convex/react";
-import { useAuthToken } from "@convex-dev/auth/react";
+import { useConvexAuth, useAction } from "convex/react";
 import { api } from "convex/_generated/api";
 import { X, FileText, Link, Upload, Sparkles, Check, AlertCircle, Mail } from "lucide-react";
 import { parseEmails, type ParsedEmailContact } from "@/lib/parse-emails";
+import { useAppQuery } from "@/lib/app-data";
+import { localGetAll, localCreate, localCreateMany } from "@/lib/local-store";
 
 type Tab = "paste" | "emails" | "url" | "file";
 
@@ -28,8 +29,8 @@ type Props = {
 };
 
 export function ImportDialog({ open, onClose }: Props) {
-  const { isAuthenticated } = useConvexAuth();
-  const authToken = useAuthToken();
+  const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+  const isGuest = !isAuthenticated && !isAuthLoading;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputId = useId();
   const [activeTab, setActiveTab] = useState<Tab>("emails");
@@ -42,10 +43,9 @@ export function ImportDialog({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [imported, setImported] = useState(false);
 
-  const isSignedOut = !isAuthenticated;
-  
   const parseFromText = useAction(api.importContacts.parseFromText);
-  const existingContacts = useQuery(api.contacts.list) ?? [];
+  const importMany = useAction(api.importContacts.importMany);
+  const existingContacts = useAppQuery(api.contacts.list, "contacts") ?? [];
 
   if (!open) return null;
 
@@ -68,8 +68,25 @@ export function ImportDialog({ open, onClose }: Props) {
           })));
         }
       } else if (activeTab === "paste" && pasteText.trim()) {
-        const results = await parseFromText({ text: pasteText });
-        setExtracted(results.map((r: ExtractedContact) => ({ ...r, _selected: true })));
+        if (isGuest) {
+          // Guest fallback: extract emails from pasted text
+          const emailResults = parseEmails(pasteText);
+          if (emailResults.length === 0) {
+            setError("No contacts found. Try pasting email addresses or use the Emails tab.");
+          } else {
+            setExtracted(emailResults.map((r: ParsedEmailContact) => ({
+              firstName: r.firstName,
+              lastName: r.lastName,
+              email: r.email,
+              company: r.company || undefined,
+              country: r.country || undefined,
+              _selected: true,
+            })));
+          }
+        } else {
+          const results = await parseFromText({ text: pasteText });
+          setExtracted(results.map((r: ExtractedContact) => ({ ...r, _selected: true })));
+        }
       } else if (activeTab === "url" && url.trim()) {
         setError("URL extraction coming soon. Use paste or emails for now.");
       } else if (activeTab === "file" && file) {
@@ -84,35 +101,69 @@ export function ImportDialog({ open, onClose }: Props) {
 
   const handleImport = async () => {
     if (!extracted) return;
+
     setLoading(true);
     setError(null);
 
     const selected = extracted.filter(c => c._selected);
+    const contacts = selected.map(({ firstName, lastName, email, phone, role, company, country, notes }) => ({
+      firstName,
+      lastName,
+      ...(email ? { email } : {}),
+      ...(phone ? { phone } : {}),
+      ...(role ? { role } : {}),
+      ...(company ? { company } : {}),
+      ...(country ? { country } : {}),
+      ...(notes ? { notes } : {}),
+    }));
 
     try {
-      const res = await fetch("/api/import", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
-        body: JSON.stringify({ contacts: selected }),
-      });
+      if (isGuest) {
+        // Guest mode: import directly into localStorage
+        const existingEmails = new Set(
+          localGetAll("contacts")
+            .map((c) => (c.email as string)?.toLowerCase())
+            .filter(Boolean),
+        );
 
-      if (res.status === 401) {
-        setError("__signin");
+        const toCreate = contacts.filter(
+          (c) => !c.email || !existingEmails.has(c.email.toLowerCase()),
+        );
+
+        // Auto-create companies from contacts
+        const existingCompanies = localGetAll("companies");
+        const companyMap = new Map(
+          existingCompanies.map((co) => [(co.name as string).toLowerCase(), co._id]),
+        );
+        for (const c of toCreate) {
+          if (c.company && !companyMap.has(c.company.toLowerCase())) {
+            const id = localCreate("companies", { name: c.company });
+            companyMap.set(c.company.toLowerCase(), id);
+          }
+        }
+
+        const rows = toCreate.map((c) => ({
+          ...c,
+          companyId: c.company ? companyMap.get(c.company.toLowerCase()) ?? null : null,
+        }));
+        localCreateMany("contacts", rows);
+
         setLoading(false);
+        setImported(true);
+        setTimeout(() => {
+          onClose();
+          setImported(false);
+          setExtracted(null);
+          setPasteText("");
+          setEmailsText("");
+          setUrl("");
+          setFile(null);
+        }, 1500);
         return;
       }
-      if (!res.ok) {
-        const text = await res.text();
-        setError(text || "Import failed. Please try again.");
-        setLoading(false);
-        return;
-      }
 
-      const { created, failed } = await res.json();
+      // Authenticated mode: use Convex action
+      const { created, failed } = await importMany({ contacts });
 
       if (created === 0 && failed > 0) {
         setError(`Import failed for all ${failed} contacts. Please try again.`);
@@ -132,7 +183,7 @@ export function ImportDialog({ open, onClose }: Props) {
         setFile(null);
       }, 1500);
     } catch {
-      setError("Network error. Please try again.");
+      setError("Import failed. Please try again.");
       setLoading(false);
     }
   };
@@ -152,6 +203,8 @@ export function ImportDialog({ open, onClose }: Props) {
   const handleFilePick = () => {
     fileInputRef.current?.click();
   };
+
+  const selectedCount = extracted?.filter((contact) => contact._selected).length ?? 0;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -292,22 +345,10 @@ export function ImportDialog({ open, onClose }: Props) {
                   </div>
                 )}
 
-                {isSignedOut && (
-                  <div className="mt-4 flex items-center justify-between gap-2 rounded-[2px] border border-foreground/20 bg-surface-cream px-3 py-2 text-sm text-foreground/70">
-                    <span>Sign in to import contacts.</span>
-                    <a href="/sign-in" className="text-mistral-orange hover:underline">Sign in</a>
-                  </div>
-                )}
-                {error && error !== "__signin" && (
+                {error && (
                   <div className="mt-4 flex items-center gap-2 rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
                     <AlertCircle className="h-4 w-4" />
                     {error}
-                  </div>
-                )}
-                {error === "__signin" && (
-                  <div className="mt-4 flex items-center justify-between gap-2 rounded-[2px] border border-foreground/20 bg-surface-cream px-3 py-2 text-sm text-foreground/70">
-                    <span>Your session expired. Please sign in again.</span>
-                    <a href="/sign-in" className="text-mistral-orange hover:underline">Sign in</a>
                   </div>
                 )}
               </div>
@@ -423,6 +464,12 @@ export function ImportDialog({ open, onClose }: Props) {
               </div>
 
               <div className="border-t border-foreground/10 p-4">
+                {error && (
+                  <div className="mb-4 flex items-center gap-2 rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button
                     onClick={() => setExtracted(null)}
@@ -432,10 +479,10 @@ export function ImportDialog({ open, onClose }: Props) {
                   </button>
                   <button
                     onClick={handleImport}
-                    disabled={loading || extracted.filter(c => c._selected).length === 0}
+                    disabled={loading || selectedCount === 0}
                     className="flex-1 rounded-[2px] bg-mistral-orange px-4 py-2 text-sm text-surface-pure hover:bg-mistral-flame active:scale-[0.98] transition disabled:opacity-50"
                   >
-                    {loading ? "Importing..." : `Import ${extracted.filter(c => c._selected).length} Contacts`}
+                    {loading ? "Importing..." : `Import ${selectedCount} Contacts`}
                   </button>
                 </div>
               </div>

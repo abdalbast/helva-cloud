@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery, useAppCount } from "@/lib/app-data";
 import { Users, Building2, Handshake, Clock, Users2, Plus, Upload, Phone, FileText, Sparkles } from "lucide-react";
 export default function CRMDashboard() {
-  const contacts = useQuery(api.contacts.list) ?? [];
-  const companies = useQuery(api.companies.list) ?? [];
-  const deals = useQuery(api.deals.list) ?? [];
-  const followUps = useQuery(api.followUps.list) ?? [];
-  const activities = useQuery(api.activities.listRecent) ?? [];
-  const partners = useQuery(api.partners.count) ?? 0;
+  const contacts = useAppQuery(api.contacts.list, "contacts") ?? [];
+  const companies = useAppQuery(api.companies.list, "companies") ?? [];
+  const deals = useAppQuery(api.deals.list, "deals") ?? [];
+  const followUps = useAppQuery(api.followUps.list, "followUps") ?? [];
+  const activities = useAppQuery(api.activities.listRecent, "activities") ?? [];
+  const partners = useAppCount(api.partners.count, "partners") ?? 0;
 
   const openDeals = deals.filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost");
   const pipelineValue = openDeals.reduce((sum, d) => sum + (d.value ?? 0), 0);

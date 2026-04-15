@@ -4,8 +4,9 @@
  * Run: pnpm test:api   (requires server at PLAYWRIGHT_BASE_URL or localhost:3000)
  */
 import { test, expect } from "@playwright/test";
+import { PLAYWRIGHT_BASE_URL } from "./test-base-url";
 
-const BASE = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const BASE = PLAYWRIGHT_BASE_URL;
 
 // ── /api/import ───────────────────────────────────────────────────────────────
 
@@ -16,11 +17,22 @@ test.describe("/api/import", () => {
       data: { contacts: [] },
     });
     expect(res.status()).toBe(401);
+    const body = await res.json();
+    expect(body).toEqual({ error: "Unauthorized" });
   });
 
   test("rejects bad JSON with 400", async ({ request }) => {
+    const secret = process.env.ADMIN_IMPORT_SECRET;
+    if (!secret) {
+      test.skip(true, "ADMIN_IMPORT_SECRET required for this test");
+      return;
+    }
     const res = await request.post(`${BASE}/api/import`, {
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Import-Email": "import-test@example.com",
+        "X-Import-Secret": secret,
+      },
       data: "this is not json",
     });
     expect(res.status()).toBe(400);
@@ -28,22 +40,21 @@ test.describe("/api/import", () => {
 
   test("rejects non-array contacts field with 400", async ({ request }) => {
     const secret = process.env.ADMIN_IMPORT_SECRET;
-    const email = process.env.TARGET_EMAIL;
-    if (!secret || !email) {
-      test.skip(true, "ADMIN_IMPORT_SECRET and TARGET_EMAIL required for this test");
+    if (!secret) {
+      test.skip(true, "ADMIN_IMPORT_SECRET required for this test");
       return;
     }
     const res = await request.post(`${BASE}/api/import`, {
       headers: {
         "Content-Type": "application/json",
-        "X-Import-Email": email,
+        "X-Import-Email": "import-test@example.com",
         "X-Import-Secret": secret,
       },
       data: { contacts: "not-an-array" },
     });
     expect(res.status()).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/array/i);
+    expect(body.error).toMatch(/payload|array/i);
   });
 
   test("rejects admin request with only one of the two required headers", async ({ request }) => {
@@ -59,15 +70,14 @@ test.describe("/api/import", () => {
 
   test("accepts admin request with empty contacts array and returns 200", async ({ request }) => {
     const secret = process.env.ADMIN_IMPORT_SECRET;
-    const email = process.env.TARGET_EMAIL;
-    if (!secret || !email) {
-      test.skip(true, "ADMIN_IMPORT_SECRET and TARGET_EMAIL required for this test");
+    if (!secret) {
+      test.skip(true, "ADMIN_IMPORT_SECRET required for this test");
       return;
     }
     const res = await request.post(`${BASE}/api/import`, {
       headers: {
         "Content-Type": "application/json",
-        "X-Import-Email": email,
+        "X-Import-Email": "import-test@example.com",
         "X-Import-Secret": secret,
       },
       data: { contacts: [] },

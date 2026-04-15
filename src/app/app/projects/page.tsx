@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, FolderKanban } from "lucide-react";
 import Link from "next/link";
@@ -32,10 +32,10 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ProjectsPage() {
-  const projects = useQuery(api.projects.list) ?? [];
-  const createProject = useMutation(api.projects.create);
-  const updateProject = useMutation(api.projects.update);
-  const removeProject = useMutation(api.projects.remove);
+  const projects = useAppQuery(api.projects.list, "projects") ?? [];
+  const createProject = useAppMutation(api.projects.create, "projects", "create");
+  const updateProject = useAppMutation(api.projects.update, "projects", "update");
+  const removeProject = useAppMutation(api.projects.remove, "projects", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

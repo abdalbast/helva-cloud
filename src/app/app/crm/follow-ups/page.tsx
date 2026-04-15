@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Clock, CheckCircle, AlarmClock } from "lucide-react";
 import Link from "next/link";
@@ -33,9 +33,9 @@ const fields: FieldDef[] = [
 ];
 
 export default function FollowUpsPage() {
-  const followUps = useQuery(api.followUps.list) ?? [];
-  const createFollowUp = useMutation(api.followUps.create);
-  const updateFollowUp = useMutation(api.followUps.update);
+  const followUps = useAppQuery(api.followUps.list, "followUps") ?? [];
+  const createFollowUp = useAppMutation(api.followUps.create, "followUps", "create");
+  const updateFollowUp = useAppMutation(api.followUps.update, "followUps", "update");
 
   const [filter, setFilter] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);

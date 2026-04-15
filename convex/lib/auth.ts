@@ -1,4 +1,4 @@
-import type { QueryCtx, MutationCtx } from "../_generated/server";
+import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
 
 export type ViewerIdentity = {
   authSubject: string;
@@ -12,7 +12,7 @@ type TenantDoc = {
 };
 
 export async function getViewerIdentity(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<ViewerIdentity | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
@@ -23,7 +23,7 @@ export async function getViewerIdentity(
 }
 
 export async function requireViewerIdentity(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<{ authSubject: string; email: string }> {
   const viewer = await getViewerIdentity(ctx);
   if (!viewer) throw new Error("Unauthenticated");
@@ -37,13 +37,13 @@ export async function requireViewerIdentity(
 }
 
 export async function getUserEmail(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<string | null> {
   return (await getViewerIdentity(ctx))?.email ?? null;
 }
 
 export async function requireUserEmail(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx | ActionCtx,
 ): Promise<string> {
   return (await requireViewerIdentity(ctx)).email;
 }

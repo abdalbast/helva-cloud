@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Send, Clock, FileEdit } from "lucide-react";
 
@@ -26,10 +26,10 @@ const fields: FieldDef[] = [
 ];
 
 export default function SocialPage() {
-  const posts = useQuery(api.socialPosts.list) ?? [];
-  const createPost = useMutation(api.socialPosts.create);
-  const updatePost = useMutation(api.socialPosts.update);
-  const removePost = useMutation(api.socialPosts.remove);
+  const posts = useAppQuery(api.socialPosts.list, "socialPosts") ?? [];
+  const createPost = useAppMutation(api.socialPosts.create, "socialPosts", "create");
+  const updatePost = useAppMutation(api.socialPosts.update, "socialPosts", "update");
+  const removePost = useAppMutation(api.socialPosts.remove, "socialPosts", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

@@ -42,11 +42,13 @@ export function SignInPageClient({
   const [pendingProvider, setPendingProvider] = useState<PendingProvider>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTo = searchParams.get("redirect") || "/app";
+
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/app");
+      router.replace(redirectTo);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectTo]);
 
   useEffect(() => {
     if (searchParams.get("error") === "access_denied") {
@@ -68,7 +70,7 @@ export function SignInPageClient({
 
   const isLocalDev =
     typeof window !== "undefined" &&
-    ["localhost", "127.0.0.1"].includes(window.location.hostname);
+    window.location.hostname === "localhost";
   const senderEmail = extractEmailAddress(magicLinkSender);
   const inboxLink = getInboxLink(email, senderEmail);
 
@@ -76,7 +78,7 @@ export function SignInPageClient({
     setPendingProvider("google");
     setError(null);
     try {
-      const result = await signIn("google", { redirectTo: "/app" });
+      const result = await signIn("google", { redirectTo });
       if (!result.redirect) {
         setError("Google sign-in could not be started. Check the provider configuration and try again.");
         setPendingProvider(null);
@@ -93,9 +95,9 @@ export function SignInPageClient({
     setPendingProvider("email");
     setError(null);
     try {
-      const result = await signIn("email", { email, redirectTo: "/app" });
+      const result = await signIn("email", { email, redirectTo });
       if (result.signingIn) {
-        router.replace("/app");
+        router.replace(redirectTo);
         return;
       }
       setStep("sent");
@@ -173,6 +175,27 @@ export function SignInPageClient({
                 {pendingProvider === "email" ? "Sending link…" : "Send sign-in link"}
               </button>
             </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-foreground/8" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-background px-3 text-[11px] text-foreground/35 uppercase tracking-wider">
+                  or
+                </span>
+              </div>
+            </div>
+
+            <Link
+              href={redirectTo}
+              className="block w-full rounded-[2px] border border-foreground/10 bg-surface-pure px-4 py-2.5 text-center text-sm text-foreground/70 hover:bg-foreground/5 active:scale-[0.98] transition"
+            >
+              Continue without signing in
+            </Link>
+            <p className="mt-2 text-center text-[11px] text-foreground/35">
+              Your data will be saved locally in this browser.
+            </p>
           </>
         ) : (
           <div className="text-center space-y-4">

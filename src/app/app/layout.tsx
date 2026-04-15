@@ -12,13 +12,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { href: "/app/ai", label: "AI" },
     { href: "/app/files", label: "Files" },
     { href: "/app/automations", label: "Automations" },
+    { href: "/app/settings", label: "Settings" },
   ];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <CommandPalette />
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
-        <SiteHeader showAuth links={links} />
+        <SiteHeader links={links} />
         <div className="mt-6">{children}</div>
       </div>
     </main>

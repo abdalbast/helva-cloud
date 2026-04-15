@@ -1,9 +1,10 @@
-"use node";
-
-import { action } from "./_generated/server";
+import { internal } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
+import { action, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
+import { mergeTenantResults, requireViewerIdentity } from "./lib/auth";
 
-type ExtractedContact = {
+type ContactImportInput = {
   firstName: string;
   lastName: string;
   email?: string;
@@ -14,11 +15,33 @@ type ExtractedContact = {
   notes?: string;
 };
 
+type ImportSummary = {
+  created: number;
+  skipped: number;
+  failed: number;
+};
+
+type ViewerImportState = {
+  contacts: Doc<"contacts">[];
+  companies: Doc<"companies">[];
+};
+
+const contactImportValidator = v.object({
+  firstName: v.string(),
+  lastName: v.string(),
+  email: v.optional(v.string()),
+  phone: v.optional(v.string()),
+  role: v.optional(v.string()),
+  company: v.optional(v.string()),
+  country: v.optional(v.string()),
+  notes: v.optional(v.string()),
+});
+
 export const parseFromText = action({
   args: { text: v.string() },
-  handler: async (ctx, { text }): Promise<ExtractedContact[]> => {
+  handler: async (ctx, { text }): Promise<ContactImportInput[]> => {
     // Simple extraction without LLM for now - pattern matching approach
-    const contacts: ExtractedContact[] = [];
+    const contacts: ContactImportInput[] = [];
     
     // Split by common delimiters (newlines, double newlines)
     const blocks = text.split(/\n\n+|\r\n\r\n+/).filter(b => b.trim().length > 10);
@@ -42,7 +65,179 @@ export const parseFromText = action({
   },
 });
 
-function extractContactFromBlock(text: string): ExtractedContact | null {
+export const listViewerImportState = internalQuery({
+  args: {},
+  handler: async (ctx): Promise<ViewerImportState> => {
+    const viewer = await requireViewerIdentity(ctx);
+
+    const [contactsByAuthSubject, contactsByEmail, companiesByAuthSubject, companiesByEmail] =
+      await Promise.all([
+        ctx.db
+          .query("contacts")
+          .withIndex("by_auth_subject", (q) =>
+            q.eq("authSubject", viewer.authSubject),
+          )
+          .collect(),
+        ctx.db
+          .query("contacts")
+          .withIndex("by_user", (q) => q.eq("userEmail", viewer.email))
+          .collect(),
+        ctx.db
+          .query("companies")
+          .withIndex("by_auth_subject", (q) =>
+            q.eq("authSubject", viewer.authSubject),
+          )
+          .collect(),
+        ctx.db
+          .query("companies")
+          .withIndex("by_user", (q) => q.eq("userEmail", viewer.email))
+          .collect(),
+      ]);
+
+    return {
+      contacts: mergeTenantResults(contactsByAuthSubject, contactsByEmail),
+      companies: mergeTenantResults(companiesByAuthSubject, companiesByEmail),
+    };
+  },
+});
+
+export const createCompanyForViewer = internalMutation({
+  args: { name: v.string() },
+  handler: async (ctx, { name }): Promise<Id<"companies">> => {
+    const viewer = await requireViewerIdentity(ctx);
+    return await ctx.db.insert("companies", {
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
+      name,
+      website: null,
+      industry: null,
+      size: null,
+      notes: null,
+    });
+  },
+});
+
+export const createContactForViewer = internalMutation({
+  args: {
+    firstName: v.string(),
+    lastName: v.string(),
+    email: v.union(v.string(), v.null()),
+    phone: v.union(v.string(), v.null()),
+    role: v.union(v.string(), v.null()),
+    companyId: v.union(v.id("companies"), v.null()),
+    country: v.union(v.string(), v.null()),
+    notes: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, args): Promise<Id<"contacts">> => {
+    const viewer = await requireViewerIdentity(ctx);
+    return await ctx.db.insert("contacts", {
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
+      firstName: args.firstName,
+      lastName: args.lastName,
+      email: args.email,
+      phone: args.phone,
+      role: args.role,
+      companyId: args.companyId,
+      country: args.country,
+      notes: args.notes,
+    });
+  },
+});
+
+export const importMany = action({
+  args: {
+    contacts: v.array(contactImportValidator),
+  },
+  handler: async (ctx, { contacts }): Promise<ImportSummary> => {
+    await requireViewerIdentity(ctx);
+
+    if (contacts.length === 0) {
+      return { created: 0, skipped: 0, failed: 0 };
+    }
+
+    const { contacts: existingContacts, companies: existingCompanies }: ViewerImportState =
+      await ctx.runQuery(internal.importContacts.listViewerImportState, {});
+
+    const existingEmailSet = new Set(
+      existingContacts
+        .map((contact) => normalizeEmailKey(contact.email))
+        .filter((email): email is string => email !== null),
+    );
+    const batchEmailSet = new Set<string>();
+    const companyCache = new Map<string, Id<"companies">>();
+
+    for (const company of existingCompanies) {
+      const companyKey = normalizeCompanyKey(company.name);
+      if (companyKey && !companyCache.has(companyKey)) {
+        companyCache.set(companyKey, company._id);
+      }
+    }
+
+    let created = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const contact of contacts) {
+      const emailKey = normalizeEmailKey(contact.email);
+      if (emailKey) {
+        if (existingEmailSet.has(emailKey) || batchEmailSet.has(emailKey)) {
+          skipped++;
+          continue;
+        }
+        batchEmailSet.add(emailKey);
+      }
+
+      const firstName = normalizeOptionalString(contact.firstName);
+      const lastName = normalizeOptionalString(contact.lastName);
+      if (!firstName || !lastName) {
+        failed++;
+        continue;
+      }
+
+      try {
+        let companyId: Id<"companies"> | null = null;
+        const companyName = normalizeOptionalString(contact.company);
+
+        if (companyName) {
+          const companyKey = normalizeCompanyKey(companyName);
+          if (companyKey) {
+            companyId = companyCache.get(companyKey) ?? null;
+            if (!companyId) {
+              companyId = await ctx.runMutation(
+                internal.importContacts.createCompanyForViewer,
+                { name: companyName },
+              );
+              companyCache.set(companyKey, companyId);
+            }
+          }
+        }
+
+        await ctx.runMutation(internal.importContacts.createContactForViewer, {
+          firstName,
+          lastName,
+          email: toNullable(normalizeOptionalString(contact.email)),
+          phone: toNullable(normalizeOptionalString(contact.phone)),
+          role: toNullable(normalizeOptionalString(contact.role)),
+          companyId,
+          country: toNullable(normalizeOptionalString(contact.country)),
+          notes: toNullable(normalizeOptionalString(contact.notes)),
+        });
+
+        if (emailKey) {
+          existingEmailSet.add(emailKey);
+        }
+        created++;
+      } catch {
+        failed++;
+      }
+    }
+
+    return { created, skipped, failed };
+  },
+});
+
+function extractContactFromBlock(text: string): ContactImportInput | null {
   const lines = text.split(/\n|\r\n/).map(l => l.trim()).filter(Boolean);
   
   let firstName = "";
@@ -148,4 +343,23 @@ function extractContactFromBlock(text: string): ExtractedContact | null {
     ...(company && { company }),
     ...(notes && { notes }),
   };
+}
+
+function normalizeOptionalString(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function normalizeEmailKey(value: string | null | undefined): string | null {
+  const normalized = normalizeOptionalString(value);
+  return normalized ? normalized.toLowerCase() : null;
+}
+
+function normalizeCompanyKey(value: string | null | undefined): string | null {
+  const normalized = normalizeOptionalString(value);
+  return normalized ? normalized.toLowerCase() : null;
+}
+
+function toNullable(value: string | undefined): string | null {
+  return value ?? null;
 }

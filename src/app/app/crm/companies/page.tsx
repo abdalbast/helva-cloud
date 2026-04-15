@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { DataTable, type Column } from "@/components/data-table";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus } from "lucide-react";
@@ -43,10 +43,10 @@ const baseColumns: Column<Company>[] = [
 ];
 
 export default function CompaniesPage() {
-  const companies = useQuery(api.companies.list) ?? [];
-  const createCompany = useMutation(api.companies.create);
-  const updateCompany = useMutation(api.companies.update);
-  const removeCompany = useMutation(api.companies.remove);
+  const companies = useAppQuery(api.companies.list, "companies") ?? [];
+  const createCompany = useAppMutation(api.companies.create, "companies", "create");
+  const updateCompany = useAppMutation(api.companies.update, "companies", "update");
+  const removeCompany = useAppMutation(api.companies.remove, "companies", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

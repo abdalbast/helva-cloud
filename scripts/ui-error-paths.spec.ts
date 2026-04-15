@@ -4,8 +4,12 @@
  * Run: pnpm test:ui   (requires server at PLAYWRIGHT_BASE_URL or localhost:3000)
  */
 import { test, expect } from "@playwright/test";
+import {
+  PLAYWRIGHT_BASE_URL,
+  PLAYWRIGHT_LOOPBACK_BASE_URL,
+} from "./test-base-url";
 
-const BASE = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+const BASE = PLAYWRIGHT_BASE_URL;
 
 // ── Middleware / auth guards ───────────────────────────────────────────────────
 
@@ -26,6 +30,18 @@ test.describe("auth middleware", () => {
       expect(page.url()).toContain("/sign-in");
     });
   }
+
+  test("127.0.0.1 protected routes end on the canonical localhost sign-in URL", async ({
+    page,
+  }) => {
+    const route = "/app/crm/contacts?source=loopback";
+    await page.goto(`${PLAYWRIGHT_LOOPBACK_BASE_URL}${route}`);
+    await page.waitForLoadState("networkidle");
+
+    expect(page.url()).toBe(
+      `${BASE}/sign-in?redirect=${encodeURIComponent(route)}`,
+    );
+  });
 });
 
 // ── Sign-in page structure ─────────────────────────────────────────────────────

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus } from "lucide-react";
 
@@ -35,11 +35,11 @@ function useFields(projects: { _id: string; name: string }[]): FieldDef[] {
 }
 
 export default function BoardPage() {
-  const tasks = useQuery(api.tasks.list) ?? [];
-  const projects = useQuery(api.projects.list) ?? [];
-  const createTask = useMutation(api.tasks.create);
-  const updateTask = useMutation(api.tasks.update);
-  const removeTask = useMutation(api.tasks.remove);
+  const tasks = useAppQuery(api.tasks.list, "tasks") ?? [];
+  const projects = useAppQuery(api.projects.list, "projects") ?? [];
+  const createTask = useAppMutation(api.tasks.create, "tasks", "create");
+  const updateTask = useAppMutation(api.tasks.update, "tasks", "update");
+  const removeTask = useAppMutation(api.tasks.remove, "tasks", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

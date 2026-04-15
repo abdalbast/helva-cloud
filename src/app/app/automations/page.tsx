@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Zap, Pause, AlertTriangle, Trash2 } from "lucide-react";
 
@@ -26,10 +26,10 @@ const fields: FieldDef[] = [
 ];
 
 export default function AutomationsPage() {
-  const automations = useQuery(api.automations.list) ?? [];
-  const createAutomation = useMutation(api.automations.create);
-  const updateAutomation = useMutation(api.automations.update);
-  const removeAutomation = useMutation(api.automations.remove);
+  const automations = useAppQuery(api.automations.list, "automations") ?? [];
+  const createAutomation = useAppMutation(api.automations.create, "automations", "create");
+  const updateAutomation = useAppMutation(api.automations.update, "automations", "update");
+  const removeAutomation = useAppMutation(api.automations.remove, "automations", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

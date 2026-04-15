@@ -1,11 +1,11 @@
 "use client";
 
-import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery } from "@/lib/app-data";
 import { Milestone, AlertTriangle, TrendingUp } from "lucide-react";
 export default function TrackingPage() {
-  const projects = useQuery(api.projects.list) ?? [];
-  const tasks = useQuery(api.tasks.list) ?? [];
+  const projects = useAppQuery(api.projects.list, "projects") ?? [];
+  const tasks = useAppQuery(api.tasks.list, "tasks") ?? [];
 
   const activeProjects = projects.filter((p) => p.status === "active");
   const overdueTasks = tasks.filter((t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "done");

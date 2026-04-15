@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Sparkles, Trash2 } from "lucide-react";
 
@@ -15,9 +15,9 @@ const fields: FieldDef[] = [
 ];
 
 export default function AIPage() {
-  const prompts = useQuery(api.aiPrompts.list) ?? [];
-  const createPrompt = useMutation(api.aiPrompts.create);
-  const removePrompt = useMutation(api.aiPrompts.remove);
+  const prompts = useAppQuery(api.aiPrompts.list, "aiPrompts") ?? [];
+  const createPrompt = useAppMutation(api.aiPrompts.create, "aiPrompts", "create");
+  const removePrompt = useAppMutation(api.aiPrompts.remove, "aiPrompts", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});

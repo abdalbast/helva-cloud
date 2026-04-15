@@ -1,15 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery, useAppCount } from "@/lib/app-data";
+import { localGetAll } from "@/lib/local-store";
 import { Users, Calendar, Send, FolderKanban, CheckSquare, PenLine, Sparkles, File, Zap, BarChart3 } from "lucide-react";
 import { HomeSearchTrigger } from "./home-search-trigger";
 export default function AppHome() {
-  const contactCount = useQuery(api.contacts.count) ?? 0;
-  const companyCount = useQuery(api.companies.count) ?? 0;
-  const openDeals = useQuery(api.deals.openCount) ?? 0;
-  const openTasks = useQuery(api.tasks.openCount) ?? 0;
+  const contactCount = useAppCount(api.contacts.count, "contacts") ?? 0;
+  const companyCount = useAppCount(api.companies.count, "companies") ?? 0;
+  const openDeals = useAppQuery(api.deals.openCount, {
+    table: "deals",
+    fn: () => localGetAll("deals").filter((d) => d.stage !== "closed_won" && d.stage !== "closed_lost").length,
+  }) ?? 0;
+  const openTasks = useAppQuery(api.tasks.openCount, {
+    table: "tasks",
+    fn: () => localGetAll("tasks").filter((t) => t.status !== "done").length,
+  }) ?? 0;
 
   const primaryTools = [
     { href: "/app/crm", icon: <Users className="h-5 w-5" />, label: "CRM", desc: "Contacts, companies, deals pipeline", color: "from-sunshine-700/10 to-block-orange/5" },

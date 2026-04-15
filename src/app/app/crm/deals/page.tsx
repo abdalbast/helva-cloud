@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -44,10 +44,10 @@ const fields: FieldDef[] = [
 ];
 
 export default function DealsPage() {
-  const deals = useQuery(api.deals.list) ?? [];
-  const createDeal = useMutation(api.deals.create);
-  const updateDeal = useMutation(api.deals.update);
-  const removeDeal = useMutation(api.deals.remove);
+  const deals = useAppQuery(api.deals.list, "deals") ?? [];
+  const createDeal = useAppMutation(api.deals.create, "deals", "create");
+  const updateDeal = useAppMutation(api.deals.update, "deals", "update");
+  const removeDeal = useAppMutation(api.deals.remove, "deals", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
