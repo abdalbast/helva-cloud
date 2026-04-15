@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "SDKs",
-  description: "Language SDKs for Helva Cloud APIs, including install, auth, and common request examples.",
+  description: "Language SDKs for HELVA CLOUD APIs, including install, auth, and common request examples.",
   path: "/docs/sdks",
 });
 
 export default function SdksPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud SDKs"
+      title="HELVA CLOUD SDKs"
       description="SDK availability and usage for JavaScript/TypeScript, Python, and future language clients."
-      quickAnswer="This page will list official Helva Cloud SDKs, install commands, version support, and common request examples."
+      quickAnswer="This page will list official HELVA CLOUD SDKs, install commands, version support, and common request examples."
       audience={["Developers", "AI coding assistants"]}
       actions={["Find available SDKs", "Install a client", "Call common APIs with retries and error handling"]}
       relatedDocs={[

@@ -6,18 +6,18 @@ import { buildPageMetadata, DOCS_LAST_UPDATED } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "API Reference",
-  description: "Helva Cloud API overview and reference structure: authentication, versions, request and response conventions, errors, and rate limits.",
+  description: "HELVA CLOUD API overview and reference structure: authentication, versions, request and response conventions, errors, and rate limits.",
   path: "/docs/api",
 });
 
 export default function ApiReferencePage() {
   return (
     <DocsPageShell
-      title="Helva Cloud API Reference"
-      description="API-first documentation for Helva Cloud. This page defines the request conventions and endpoint documentation structure used by developers and coding assistants."
+      title="HELVA CLOUD API Reference"
+      description="API-first documentation for HELVA CLOUD. This page defines the request conventions and endpoint documentation structure used by developers and coding assistants."
     >
       <PageSummaryBlock
-        quickAnswer="Use this page to understand how Helva Cloud APIs are documented and called: base URL, auth, request/response format, endpoint status labels, errors, and rate limits."
+        quickAnswer="Use this page to understand how HELVA CLOUD APIs are documented and called: base URL, auth, request/response format, endpoint status labels, errors, and rate limits."
         audience={["Developers", "Integrators", "AI coding assistants", "Technical founders evaluating API fit"]}
         actions={[
           "Find the API base URL and versioning model",
@@ -41,23 +41,23 @@ export default function ApiReferencePage() {
         lastUpdated={DOCS_LAST_UPDATED}
       />
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">API overview</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- API-first usage is a core Helva Cloud principle for automation and developer workflows.</li>
-          <li>- Current public docs are an active draft while endpoint inventory and auth methods are finalised.</li>
-          <li>- Current repo includes an internal ingestion endpoint pattern at <code>/api/ingest/openclaw</code>.</li>
-          <li>- Every endpoint page should include cURL, TypeScript, Python, JSON request/response, errors, and rate-limit notes.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">API overview</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> API-first usage is a core HELVA CLOUD principle for automation and developer workflows.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Current public docs are an active draft while endpoint inventory and auth methods are finalised.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Current repo includes an internal ingestion endpoint pattern at <code className="rounded-[2px] border border-foreground/20 bg-surface-cream px-1 text-sunshine-700">/api/ingest/openclaw</code>.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Every endpoint page should include cURL, TypeScript, Python, JSON request/response, errors, and rate-limit notes.</li>
         </ul>
       </section>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Base URL and versioning (placeholder)</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- Base URL (planned): <code>https://helva.cloud/api/v1</code></li>
-          <li>- Versioning model (planned): version in path</li>
-          <li>- Endpoint lifecycle labels: Live, Beta, Planned, Coming soon</li>
-          <li>- Breaking changes will be published on <Link href="/changelog" className="underline">/changelog</Link> with exact dates</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Base URL and versioning (placeholder)</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Base URL (planned): <code className="rounded-[2px] border border-foreground/20 bg-surface-cream px-1 text-sunshine-700">https://helva.cloud/api/v1</code></li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Versioning model (planned): version in path</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Endpoint lifecycle labels: Live, Beta, Planned, Coming soon</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Breaking changes will be published on <Link href="/changelog" className="text-mistral-orange hover:underline">/changelog</Link> with exact dates</li>
         </ul>
       </section>
 
@@ -121,15 +121,15 @@ print(resp.status_code, resp.json())`}
 }`}
       </CodeSample>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Endpoint groups (documentation map)</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- Authentication and identity (planned)</li>
-          <li>- Projects and environments (planned)</li>
-          <li>- Workflows and automation runs (planned)</li>
-          <li>- Integrations and provider connections (planned)</li>
-          <li>- Usage and analytics events (beta/internal patterns today)</li>
-          <li>- Webhooks and event subscriptions (planned)</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Endpoint groups (documentation map)</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Authentication and identity (planned)</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Projects and environments (planned)</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Workflows and automation runs (planned)</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Integrations and provider connections (planned)</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Usage and analytics events (beta/internal patterns today)</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Webhooks and event subscriptions (planned)</li>
         </ul>
       </section>
     </DocsPageShell>

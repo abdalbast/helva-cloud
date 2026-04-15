@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const SITE_NAME = "Helva Cloud";
+export const SITE_NAME = "HELVA CLOUD";
 export const SITE_URL = "https://helva.cloud";
 export const DOCS_LAST_UPDATED = "2026-02-24";
 export const DOCS_VERSION = "0.1.0";
@@ -47,13 +47,13 @@ export const primaryDocsLinks: RelatedDocLink[] = [
   {
     href: "/docs/getting-started",
     label: "Getting Started",
-    reason: "Set up your first Helva Cloud workflow",
+    reason: "Set up your first HELVA CLOUD workflow",
   },
   { href: "/docs/workflows", label: "Workflows", reason: "Solve common build and automation tasks" },
   { href: "/docs/api", label: "API Reference", reason: "Find request and response conventions" },
   {
     href: "/docs/llm-usage-guide",
     label: "LLM Usage Guide",
-    reason: "Use Helva Cloud with coding assistants",
+    reason: "Use HELVA CLOUD with coding assistants",
   },
 ];

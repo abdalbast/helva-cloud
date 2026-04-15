@@ -104,6 +104,7 @@ TROUBLESHOOTING
 
 CANONICAL_PAGES
 - / (Home)
+- /documentation (Documentation overview)
 - /docs (Docs Home, active draft)
 - /docs/getting-started (active draft)
 - /docs/core-concepts (placeholder page published; planned content)

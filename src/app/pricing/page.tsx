@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Pricing",
-  description: "Helva Cloud pricing, plans, included usage, and billing model.",
+  description: "HELVA CLOUD pricing, plans, included usage, and billing model.",
   path: "/pricing",
 });
 
 export default function PricingPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Pricing"
-      description="Plans, usage limits, overage policy, and billing details for Helva Cloud."
-      quickAnswer="This page will publish Helva Cloud pricing and plan details in a structured, agent-parsable format."
+      title="HELVA CLOUD Pricing"
+      description="Plans, usage limits, overage policy, and billing details for HELVA CLOUD."
+      quickAnswer="This page will publish HELVA CLOUD pricing and plan details in a structured, agent-parsable format."
       audience={["Founders", "Developers", "Buyers", "Agents comparing tools"]}
       actions={["Compare plans", "Review included usage", "Understand billing and support tiers"]}
       relatedDocs={[

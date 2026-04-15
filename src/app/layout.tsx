@@ -1,34 +1,36 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ConvexClientProvider } from "./ConvexClientProvider";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 
 const baseUrl = "https://helva.cloud";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Helva Cloud",
-    template: "%s | Helva Cloud",
+    default: "HELVA CLOUD",
+    template: "%s | HELVA CLOUD",
   },
-  description: "Launchpad for Helva business tools.",
+  description: "Launchpad for HELVA business tools.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: baseUrl,
-    title: "Helva Cloud",
-    description: "Launchpad for Helva business tools.",
-    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "Helva Cloud" }],
+    title: "HELVA CLOUD",
+    description: "Launchpad for HELVA business tools.",
+    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "HELVA CLOUD" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Helva Cloud",
-    description: "Launchpad for Helva business tools.",
+    title: "HELVA CLOUD",
+    description: "Launchpad for HELVA business tools.",
     images: ["/og.svg"],
   },
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -36,9 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ConvexAuthNextjsServerProvider>
+          <ConvexClientProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </ConvexClientProvider>
+        </ConvexAuthNextjsServerProvider>
       </body>
     </html>
   );

@@ -3,14 +3,14 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Integrations",
-  description: "Helva Cloud integration guides for databases, auth providers, AI providers, hosting, and automation tools.",
+  description: "HELVA CLOUD integration guides for databases, auth providers, AI providers, hosting, and automation tools.",
   path: "/docs/integrations",
 });
 
 export default function IntegrationsPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Integrations"
+      title="HELVA CLOUD Integrations"
       description="Integration index and setup guides for databases, auth, hosting, AI providers, and automation tools."
       quickAnswer="This page will document supported integrations and provide step-by-step setup guidance with status labels for each integration."
       audience={["Developers", "Technical founders", "Automation teams"]}

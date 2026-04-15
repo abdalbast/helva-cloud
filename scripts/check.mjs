@@ -187,23 +187,12 @@ function main() {
     err("dependencies not installed (`node_modules` missing). Run `pnpm install`.");
   }
 
-  const hasGoogle = Boolean(envLocal.GOOGLE_CLIENT_ID) && Boolean(envLocal.GOOGLE_CLIENT_SECRET);
-  if (hasGoogle) {
-    ok("Google OAuth env vars are set");
-  } else {
-    info("Google OAuth env vars are not set (allowed in local dev via dev login fallback)");
-  }
+  info("Google OAuth is configured as a Convex deployment env var (AUTH_GOOGLE_CLIENT_ID)");
 
-  if (envLocal.NEXTAUTH_SECRET) {
-    ok("NEXTAUTH_SECRET is set");
+  if (envLocal.NEXT_PUBLIC_CONVEX_URL) {
+    ok("NEXT_PUBLIC_CONVEX_URL is set");
   } else {
-    warn("NEXTAUTH_SECRET is not set (recommended even in local dev)");
-  }
-
-  if (envLocal.DATABASE_URL) {
-    ok("DATABASE_URL is set");
-  } else {
-    info("DATABASE_URL not set (`/app/openclaw-usage` will show a setup message)");
+    info("NEXT_PUBLIC_CONVEX_URL not set (Convex dev server may not be connected)");
   }
 
   if (envLocal.HELVA_COLLECTOR_TOKEN) {
@@ -212,14 +201,14 @@ function main() {
     info("HELVA_COLLECTOR_TOKEN not set (ingest API route will return 500 until configured)");
   }
 
-  if (exists("sql/schema.sql")) ok("database schema file found");
-  else err("sql/schema.sql missing");
+  if (exists("convex/schema.ts")) ok("Convex schema file found");
+  else err("convex/schema.ts missing");
 
   if (exists("src/app/api/ingest/openclaw/route.ts")) ok("ingest route found");
   else err("ingest route missing");
 
-  if (exists("src/app/api/auth/[...nextauth]/route.ts")) ok("auth route found");
-  else err("auth route missing");
+  if (exists("src/app/sign-in/page.tsx")) ok("Convex Auth sign-in page found");
+  else err("sign-in page missing (src/app/sign-in/page.tsx)");
 
   runLlmDocsParityChecks();
 

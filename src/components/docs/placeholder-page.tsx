@@ -40,17 +40,17 @@ export function PlaceholderPage({
         lastUpdated={DOCS_LAST_UPDATED}
       />
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Page Status</h2>
-        <p className="mt-2 text-sm text-foreground/80">{statusNote}</p>
-        <ul className="mt-4 space-y-2 text-sm text-foreground/80">
-          <li>- This page is intentionally published early to create a stable canonical path.</li>
-          <li>- Content will be expanded with code snippets and operational details as features go live.</li>
-          <li>- Placeholder sections are labelled clearly to reduce incorrect assumptions by agents.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Page Status</h2>
+        <p className="text-body mt-2 text-foreground/80">{statusNote}</p>
+        <ul className="text-body mt-4 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> This page is intentionally published early to create a stable canonical path.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Content will be expanded with code snippets and operational details as features go live.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Placeholder sections are labelled clearly to reduce incorrect assumptions by agents.</li>
         </ul>
-        <div className="mt-4 text-sm">
-          <Link href="/docs" className="underline underline-offset-2">
-            Return to Docs Home
+        <div className="text-body mt-4">
+          <Link href="/docs" className="text-mistral-orange hover:underline underline-offset-2">
+            ← Return to Docs Home
           </Link>
         </div>
       </section>

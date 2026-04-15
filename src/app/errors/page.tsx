@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Errors",
-  description: "Helva Cloud error catalogue, HTTP status mapping, and troubleshooting guidance.",
+  description: "HELVA CLOUD error catalogue, HTTP status mapping, and troubleshooting guidance.",
   path: "/errors",
 });
 
 export default function ErrorsPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Errors and Troubleshooting"
-      description="Error response format, common error codes, and debugging guidance for Helva Cloud APIs and integrations."
-      quickAnswer="This page will map Helva Cloud error codes and HTTP statuses to clear fixes, including retry guidance and integration troubleshooting steps."
+      title="HELVA CLOUD Errors and Troubleshooting"
+      description="Error response format, common error codes, and debugging guidance for HELVA CLOUD APIs and integrations."
+      quickAnswer="This page will map HELVA CLOUD error codes and HTTP statuses to clear fixes, including retry guidance and integration troubleshooting steps."
       audience={["Developers", "Integrators", "Support teams", "Coding assistants"]}
       actions={["Identify error meaning", "Apply recommended fix", "Determine whether to retry"]}
       relatedDocs={[

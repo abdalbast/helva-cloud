@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "FAQ",
-  description: "Frequently asked questions about Helva Cloud, APIs, integrations, pricing, and support.",
+  description: "Frequently asked questions about HELVA CLOUD, APIs, integrations, pricing, and support.",
   path: "/faq",
 });
 
 export default function FaqPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud FAQ"
-      description="Short, direct answers to common questions about Helva Cloud product scope, docs, APIs, pricing, and support."
-      quickAnswer="This page will provide concise answers to common Helva Cloud questions with links to the canonical docs pages for detail."
+      title="HELVA CLOUD FAQ"
+      description="Short, direct answers to common questions about HELVA CLOUD product scope, docs, APIs, pricing, and support."
+      quickAnswer="This page will provide concise answers to common HELVA CLOUD questions with links to the canonical docs pages for detail."
       audience={["Founders", "Developers", "Builders", "LLM agents"]}
       actions={["Get quick product and API answers", "Find canonical docs links", "Resolve common pre-sales and technical questions"]}
       relatedDocs={[

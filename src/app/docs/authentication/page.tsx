@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Authentication",
-  description: "Authentication methods, credential handling, and request authorisation for Helva Cloud APIs.",
+  description: "Authentication methods, credential handling, and request authorisation for HELVA CLOUD APIs.",
   path: "/docs/authentication",
 });
 
 export default function AuthenticationPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Authentication"
+      title="HELVA CLOUD Authentication"
       description="Authentication methods, credential setup, token handling, and secure request patterns."
-      quickAnswer="This page will document how to authenticate Helva Cloud API requests and manage credentials safely."
+      quickAnswer="This page will document how to authenticate HELVA CLOUD API requests and manage credentials safely."
       audience={["Developers", "Integrators", "AI coding assistants"]}
       actions={["Understand supported auth methods", "Configure credentials", "Send authenticated requests"]}
       relatedDocs={[

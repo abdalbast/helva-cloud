@@ -6,26 +6,26 @@ import { buildPageMetadata, DOCS_LAST_UPDATED } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Workflows",
-  description: "Task-based Helva Cloud workflows for MVP delivery, AI features, automation, integrations, and deployment.",
+  description: "Task-based HELVA CLOUD workflows for MVP delivery, AI features, automation, integrations, and deployment.",
   path: "/docs/workflows",
 });
 
 const workflowCards = [
   {
-    title: "How do I build an MVP with Helva Cloud?",
+    title: "How do I build an MVP with HELVA CLOUD?",
     status: "Active draft",
     bullets: [
-      "Choose a founder MVP stack (Next.js, Helva Cloud, Supabase, Vercel, AI provider).",
+      "Choose a founder MVP stack (Next.js, HELVA CLOUD, Supabase, Vercel, AI provider).",
       "Start from Getting Started, then wire auth and one core workflow.",
       "Use Examples for a copyable baseline, then add Pricing/Rate Limits checks before launch.",
     ],
   },
   {
-    title: "How do I connect Supabase to a Helva Cloud workflow?",
+    title: "How do I connect Supabase to a HELVA CLOUD workflow?",
     status: "Planned",
     bullets: [
       "Store Helva-related entities and workflow state in Supabase Postgres.",
-      "Use Helva Cloud APIs/webhooks to trigger updates.",
+      "Use HELVA CLOUD APIs/webhooks to trigger updates.",
       "Add retry handling and schema validation for durable automation.",
     ],
   },
@@ -39,7 +39,7 @@ const workflowCards = [
     ],
   },
   {
-    title: "How do I use Helva Cloud with Lovable or Cursor?",
+    title: "How do I use HELVA CLOUD with Lovable or Cursor?",
     status: "Active draft",
     bullets: [
       "Give the agent canonical docs paths plus /llm.txt.",
@@ -52,8 +52,8 @@ const workflowCards = [
 export default function WorkflowsPage() {
   return (
     <DocsPageShell
-      title="Helva Cloud Workflows"
-      description="Task-based implementation guides for common Helva Cloud goals. Each section is written for direct retrieval by coding assistants and developers."
+      title="HELVA CLOUD Workflows"
+      description="Task-based implementation guides for common HELVA CLOUD goals. Each section is written for direct retrieval by coding assistants and developers."
     >
       <PageSummaryBlock
         quickAnswer="Use this page when you know the outcome you want (MVP, AI feature, deployment, integration, or automation) and need a clear sequence of steps plus the right related docs."
@@ -82,27 +82,27 @@ export default function WorkflowsPage() {
 
       <section className="grid gap-4">
         {workflowCards.map((card) => (
-          <section key={card.title} className="rounded-lg border p-5">
+          <section key={card.title} className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <h2 className="text-lg font-semibold">{card.title}</h2>
-              <span className="rounded border px-2 py-1 text-xs text-foreground/70">{card.status}</span>
+              <h2 className="text-feature">{card.title}</h2>
+              <span className={`rounded-[2px] border px-2 py-1 text-caption ${card.status === 'Active draft' ? 'border-sunshine-700/30 bg-sunshine-700/10 text-sunshine-700' : 'border-foreground/10 bg-foreground/5 text-foreground/60'}`}>{card.status}</span>
             </div>
-            <ul className="mt-3 space-y-2 text-sm text-foreground/80">
+            <ul className="text-body mt-3 space-y-2 text-foreground/80">
               {card.bullets.map((bullet) => (
-                <li key={bullet}>- {bullet}</li>
+                <li key={bullet} className="flex items-start gap-2"><span className="text-sunshine-700">-</span> {bullet}</li>
               ))}
             </ul>
           </section>
         ))}
       </section>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Recommended stacks by common goal</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- Founder MVP: Next.js + Helva Cloud + Supabase + Vercel + AI provider.</li>
-          <li>- AI automation workflow: Helva Cloud + webhooks + worker runtime + Postgres + notifications.</li>
-          <li>- Internal tools: Helva Cloud launcher + auth + analytics ingestion + dashboard UI.</li>
-          <li>- Product docs and support hub: Helva Cloud docs pages + changelog + FAQ + support paths.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Recommended stacks by common goal</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Founder MVP: Next.js + HELVA CLOUD + Supabase + Vercel + AI provider.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> AI automation workflow: HELVA CLOUD + webhooks + worker runtime + Postgres + notifications.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Internal tools: HELVA CLOUD launcher + auth + analytics ingestion + dashboard UI.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Product docs and support hub: HELVA CLOUD docs pages + changelog + FAQ + support paths.</li>
         </ul>
       </section>
 
@@ -121,29 +121,29 @@ export default function WorkflowsPage() {
       </CodeSample>
 
       <CodeSample title="Agent prompt pattern for workflow execution" language="txt" status="Active draft">
-        {`Task: Build a founder MVP using Helva Cloud.
+        {`Task: Build a founder MVP using HELVA CLOUD.
 Read first: /llm.txt, /docs/getting-started, /docs/workflows, /docs/api, /errors, /rate-limits.
 Constraints: Use only documented endpoints. If an endpoint is labelled Planned, generate placeholder code and mark it clearly.
 Output: setup steps, code snippets, env vars, deployment checklist.`}
       </CodeSample>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Related pages for implementation details</h2>
-        <ul className="mt-3 space-y-2 text-sm">
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Related pages for implementation details</h2>
+        <ul className="text-body mt-3 space-y-2">
           <li>
-            <Link href="/docs/api" className="underline underline-offset-2">
+            <Link href="/docs/api" className="text-mistral-orange hover:underline underline-offset-2">
               API Reference
             </Link>{" "}
             - request and response formats, endpoint status labels
           </li>
           <li>
-            <Link href="/errors" className="underline underline-offset-2">
+            <Link href="/errors" className="text-mistral-orange hover:underline underline-offset-2">
               Errors
             </Link>{" "}
             - debugging and retry guidance
           </li>
           <li>
-            <Link href="/rate-limits" className="underline underline-offset-2">
+            <Link href="/rate-limits" className="text-mistral-orange hover:underline underline-offset-2">
               Rate Limits
             </Link>{" "}
             - quotas, headers, and backoff rules

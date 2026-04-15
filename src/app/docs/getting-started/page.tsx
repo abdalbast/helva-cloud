@@ -6,14 +6,14 @@ import { buildPageMetadata, DOCS_LAST_UPDATED } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Getting Started",
-  description: "Get started with Helva Cloud quickly with setup steps, first request patterns, and next steps by goal.",
+  description: "Get started with HELVA CLOUD quickly with setup steps, first request patterns, and next steps by goal.",
   path: "/docs/getting-started",
 });
 
 export default function GettingStartedPage() {
   return (
     <DocsPageShell
-      title="Getting Started with Helva Cloud"
+      title="Getting Started with HELVA CLOUD"
       description="Fast onboarding for builders and developers who want to start a workflow, explore the API, or prepare an MVP stack."
     >
       <PageSummaryBlock
@@ -41,24 +41,24 @@ export default function GettingStartedPage() {
         lastUpdated={DOCS_LAST_UPDATED}
       />
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">How do I get started with Helva Cloud?</h2>
-        <ol className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>1. Decide your primary goal: founder MVP, developer integration, AI workflow, or internal tool delivery.</li>
-          <li>2. Review <Link href="/docs/core-concepts" className="underline">Core Concepts</Link> for platform terminology and workflow model.</li>
-          <li>3. Configure credentials and environment variables (see <Link href="/docs/authentication" className="underline">Authentication</Link>).</li>
-          <li>4. Test a first request pattern in cURL, JavaScript/TypeScript, or Python.</li>
-          <li>5. Continue with a task guide in <Link href="/docs/workflows" className="underline">Workflows</Link>.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">How do I get started with HELVA CLOUD?</h2>
+        <ol className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700 font-normal">1.</span> Decide your primary goal: founder MVP, developer integration, AI workflow, or internal tool delivery.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700 font-normal">2.</span> Review <Link href="/docs/core-concepts" className="text-mistral-orange hover:underline">Core Concepts</Link> for platform terminology and workflow model.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700 font-normal">3.</span> Configure credentials and environment variables (see <Link href="/docs/authentication" className="text-mistral-orange hover:underline">Authentication</Link>).</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700 font-normal">4.</span> Test a first request pattern in cURL, JavaScript/TypeScript, or Python.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700 font-normal">5.</span> Continue with a task guide in <Link href="/docs/workflows" className="text-mistral-orange hover:underline">Workflows</Link>.</li>
         </ol>
       </section>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Recommended start paths by goal</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- Founder MVP: start with Workflows, then Examples, then Pricing.</li>
-          <li>- Developer integration: start with Authentication, API Reference, and Errors.</li>
-          <li>- AI workflow: start with LLM Usage Guide, Workflows, and Integrations.</li>
-          <li>- Internal tool delivery: start with Workflows, API Reference, and Performance.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">Recommended start paths by goal</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Founder MVP: start with Workflows, then Examples, then Pricing.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Developer integration: start with Authentication, API Reference, and Errors.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> AI workflow: start with LLM Usage Guide, Workflows, and Integrations.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Internal tool delivery: start with Workflows, API Reference, and Performance.</li>
         </ul>
       </section>
 
@@ -90,7 +90,7 @@ SUPABASE_ANON_KEY=your_supabase_key`}
 );
 
 if (!res.ok) {
-  throw new Error(\`Helva Cloud request failed: \${res.status}\`);
+  throw new Error(\`HELVA CLOUD request failed: \${res.status}\`);
 }
 
 const data = await res.json();
@@ -112,12 +112,12 @@ response.raise_for_status()
 print(response.json())`}
       </CodeSample>
 
-      <section className="rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">What is available now vs planned?</h2>
-        <ul className="mt-3 space-y-2 text-sm text-foreground/80">
-          <li>- Current site: public landing page and private app launcher pattern.</li>
-          <li>- Current repo capability: OpenClaw usage ingestion endpoint pattern and usage dashboard.</li>
-          <li>- Planned docs expansion: public API reference, integrations, SDKs, rate limits, errors, pricing, and performance pages.</li>
+      <section className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+        <h2 className="text-feature">What is available now vs planned?</h2>
+        <ul className="text-body mt-3 space-y-2 text-foreground/80">
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Current site: public landing page and private app launcher pattern.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Current repo capability: OpenClaw usage ingestion endpoint pattern and usage dashboard.</li>
+          <li className="flex items-start gap-2"><span className="text-sunshine-700">-</span> Planned docs expansion: public API reference, integrations, SDKs, rate limits, errors, pricing, and performance pages.</li>
         </ul>
       </section>
     </DocsPageShell>

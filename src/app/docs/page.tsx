@@ -5,7 +5,7 @@ import { buildPageMetadata, DOCS_LAST_UPDATED, primaryDocsLinks } from "@/lib/si
 
 export const metadata = buildPageMetadata({
   title: "Docs",
-  description: "Task-first documentation hub for Helva Cloud builders, developers, and AI coding assistants.",
+  description: "Task-first documentation hub for HELVA CLOUD builders, developers, and AI coding assistants.",
   path: "/docs",
 });
 
@@ -16,13 +16,13 @@ const sections = [
       {
         href: "/docs/getting-started",
         label: "Getting Started",
-        desc: "Set up your first Helva Cloud workflow and find the fastest next step by goal.",
+        desc: "Set up your first HELVA CLOUD workflow and find the fastest next step by goal.",
         status: "Active draft",
       },
       {
         href: "/docs/core-concepts",
         label: "Core Concepts",
-        desc: "Understand Helva Cloud terminology, project structure, and workflow model.",
+        desc: "Understand HELVA CLOUD terminology, project structure, and workflow model.",
         status: "Planned",
       },
     ],
@@ -45,7 +45,7 @@ const sections = [
       {
         href: "/docs/examples",
         label: "Examples",
-        desc: "Copyable code patterns for common Helva Cloud use cases.",
+        desc: "Copyable code patterns for common HELVA CLOUD use cases.",
         status: "Planned",
       },
     ],
@@ -103,7 +103,7 @@ const sections = [
       {
         href: "/docs/llm-usage-guide",
         label: "LLM Usage Guide",
-        desc: "How to use Helva Cloud with ChatGPT, Claude, Gemini, Copilot, Cursor, and Lovable.",
+        desc: "How to use HELVA CLOUD with ChatGPT, Claude, Gemini, Copilot, Cursor, and Lovable.",
         status: "Active draft",
       },
     ],
@@ -113,11 +113,11 @@ const sections = [
 export default function DocsHomePage() {
   return (
     <DocsPageShell
-      title="Helva Cloud Docs"
-      description="Developer and agent-friendly documentation for building, integrating, and operating Helva Cloud workflows."
+      title="HELVA CLOUD Docs"
+      description="Developer and agent-friendly documentation for building, integrating, and operating HELVA CLOUD workflows."
     >
       <PageSummaryBlock
-        quickAnswer="Use this page to navigate Helva Cloud documentation by task. Start with Getting Started, then move to Workflows for goal-based guides or API Reference for request-level details."
+        quickAnswer="Use this page to navigate HELVA CLOUD documentation by task. Start with Getting Started, then move to Workflows for goal-based guides or API Reference for request-level details."
         audience={["Developers", "Technical founders", "Builders", "LLM and coding agents"]}
         actions={[
           "Find the correct doc page by goal",
@@ -139,19 +139,19 @@ export default function DocsHomePage() {
 
       <section className="grid gap-6">
         {sections.map((section) => (
-          <section key={section.title} className="rounded-lg border p-5">
-            <h2 className="text-lg font-semibold">{section.title}</h2>
+          <section key={section.title} className="rounded-[2px] border border-foreground/10 bg-surface-pure p-5 shadow-golden">
+            <h2 className="text-feature">{section.title}</h2>
             <ul className="mt-4 grid gap-3">
               {section.items.map((item) => (
-                <li key={item.href} className="rounded border p-4">
+                <li key={item.href} className="rounded-[2px] border border-foreground/8 bg-surface-cream/40 p-4 transition hover:border-sunshine-700/20 hover:bg-surface-cream">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <Link href={item.href} className="font-medium underline underline-offset-2">
+                      <Link href={item.href} className="font-normal text-foreground hover:text-mistral-orange hover:underline underline-offset-2">
                         {item.label}
                       </Link>
-                      <p className="mt-1 text-sm text-foreground/75">{item.desc}</p>
+                      <p className="text-body mt-1 text-foreground/75">{item.desc}</p>
                     </div>
-                    <span className="rounded border px-2 py-1 text-xs text-foreground/70">{item.status}</span>
+                    <span className={`rounded-[2px] border px-2 py-1 text-caption ${item.status === 'Active draft' ? 'border-sunshine-700/30 bg-sunshine-700/10 text-sunshine-700' : 'border-foreground/10 bg-foreground/5 text-foreground/60'}`}>{item.status}</span>
                   </div>
                 </li>
               ))}

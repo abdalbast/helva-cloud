@@ -1,26 +1,318 @@
 @import "tailwindcss";
 
+/*
+ * Mistral-Inspired Warm Design System
+ * Golden-amber palette, sharp geometry, weight-400 hierarchy
+ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core Warm Colors */
+  --background: #fffaeb;
+  --foreground: #1f1f1f;
+
+  /* Surface Colors */
+  --surface-cream: #fff0c2;
+  --surface-warm: #ffe8a8;
+  --surface-pure: #ffffff;
+
+  /* Brand & Accent */
+  --mistral-orange: #fa520f;
+  --mistral-flame: #fb6424;
+  --sunshine-900: #ff8a00;
+  --sunshine-700: #ffa110;
+  --sunshine-500: #ffb83e;
+  --sunshine-300: #ffd06a;
+  --block-gold: #ffe295;
+  --bright-yellow: #ffd900;
+  --block-orange: #ff8105;
+
+  /* Semantic */
+  --accent: hsl(17, 96%, 52%);
+  --input-border: hsl(240, 5.9%, 90%);
+  --black-tint: hsl(0, 0%, 24%);
+
+  /* Golden Shadow System */
+  --shadow-amber-1: rgba(127, 99, 21, 0.12);
+  --shadow-amber-2: rgba(127, 99, 21, 0.10);
+  --shadow-amber-3: rgba(127, 99, 21, 0.08);
+  --shadow-amber-4: rgba(127, 99, 21, 0.06);
+  --shadow-amber-5: rgba(127, 99, 21, 0.04);
+
+  /* Golden Float Shadow */
+  --shadow-golden: var(--shadow-amber-1) -8px 16px 39px,
+                   var(--shadow-amber-2) -33px 64px 72px,
+                   var(--shadow-amber-3) -73px 144px 97px,
+                   var(--shadow-amber-4) -129px 256px 114px,
+                   var(--shadow-amber-5) -202px 400px 127px;
+}
+
+.dark {
+  /* Warm Dark Mode */
+  --background: #1a1410;
+  --foreground: #fffaeb;
+
+  /* Dark Surface Colors */
+  --surface-cream: #2a2018;
+  --surface-warm: #3d2e20;
+  --surface-pure: #0f0c09;
+
+  /* Brand & Accent (brighter for dark) */
+  --mistral-orange: #fb6424;
+  --mistral-flame: #fc7535;
+  --sunshine-900: #ffb83e;
+  --sunshine-700: #ffc96a;
+  --sunshine-500: #ffd98a;
+  --sunshine-300: #ffe8a8;
+  --block-gold: #3d2e20;
+  --bright-yellow: #ffa110;
+  --block-orange: #fc7535;
+
+  /* Semantic */
+  --accent: hsl(17, 96%, 58%);
+  --input-border: hsl(30, 20%, 25%);
+  --black-tint: hsl(30, 15%, 65%);
+
+  /* Golden Shadow System (warmer for dark) */
+  --shadow-amber-1: rgba(255, 161, 16, 0.20);
+  --shadow-amber-2: rgba(255, 161, 16, 0.15);
+  --shadow-amber-3: rgba(255, 161, 16, 0.10);
+  --shadow-amber-4: rgba(255, 161, 16, 0.07);
+  --shadow-amber-5: rgba(255, 161, 16, 0.04);
+
+  /* Golden Float Shadow */
+  --shadow-golden: var(--shadow-amber-1) -8px 16px 39px,
+                   var(--shadow-amber-2) -33px 64px 72px,
+                   var(--shadow-amber-3) -73px 144px 97px,
+                   var(--shadow-amber-4) -129px 256px 114px,
+                   var(--shadow-amber-5) -202px 400px 127px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-pure: var(--surface-pure);
+  --color-mistral-orange: var(--mistral-orange);
+  --color-mistral-flame: var(--mistral-flame);
+  --color-sunshine-900: var(--sunshine-900);
+  --color-sunshine-700: var(--sunshine-700);
+  --color-sunshine-500: var(--sunshine-500);
+  --color-sunshine-300: var(--sunshine-300);
+  --color-block-gold: var(--block-gold);
+  --color-bright-yellow: var(--bright-yellow);
+  --color-block-orange: var(--block-orange);
+  --color-accent: var(--accent);
+  --font-sans: Arial, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --shadow-golden: var(--shadow-golden);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base Typography */
+html {
+  font-family: Arial, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Scale - Weight 400 Throughout */
+.text-display {
+  font-size: 5.13rem; /* 82px */
+  line-height: 1.0;
+  letter-spacing: -2.05px;
+  font-weight: 400;
+}
+
+.text-section {
+  font-size: 3.5rem; /* 56px */
+  line-height: 0.95;
+  font-weight: 400;
+}
+
+.text-subheading {
+  font-size: 3rem; /* 48px */
+  line-height: 0.95;
+  font-weight: 400;
+}
+
+.text-card-title {
+  font-size: 2rem; /* 32px */
+  line-height: 1.15;
+  font-weight: 400;
+}
+
+.text-feature {
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.33;
+  font-weight: 400;
+}
+
+.text-body {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.text-caption {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.43;
+  font-weight: 400;
+}
+
+/* Responsive Display Typography */
+@media (max-width: 768px) {
+  .text-display {
+    font-size: 3rem; /* 48px */
+    letter-spacing: -1px;
+  }
+  .text-section {
+    font-size: 2.25rem; /* 36px */
+  }
+  .text-subheading {
+    font-size: 1.875rem; /* 30px */
+  }
+}
+
+@media (max-width: 640px) {
+  .text-display {
+    font-size: 2rem; /* 32px */
+    letter-spacing: -0.5px;
+  }
+  .text-card-title {
+    font-size: 1.5rem; /* 24px */
+  }
+  .text-feature {
+    font-size: 1.25rem; /* 20px */
+  }
+}
+
+/* Golden Shadow Utilities */
+.shadow-golden {
+  box-shadow: var(--shadow-golden);
+}
+
+/* Focus States - Warm Accent */
+.focus-ring-warm:focus-visible {
+  outline: 2px solid var(--mistral-orange);
+  outline-offset: 2px;
+}
+
+/* Pointer cursor for all interactive elements */
+button,
+a,
+[role="button"],
+[role="link"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="file"],
+label,
+select,
+summary,
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* ─── Microanimation Keyframes ─── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 150ms ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 150ms ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 200ms ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 150ms ease-out both;
+}
+
+/* ─── Brand Logo Morph: HELVA CLOUD → HC ─── */
+.brand-logo {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.brand-collapse {
+  display: inline-block;
+  max-width: 5em;
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+}
+
+.brand-collapse-b {
+  transition-delay: 50ms;
+}
+
+.brand-gap {
+  display: inline-block;
+  width: 0.3em;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) 25ms;
+}
+
+/* ─── Mobile Nav Scroll Strip ─── */
+.nav-scroll {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 24px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 24px), transparent 100%);
+}
+.nav-scroll::-webkit-scrollbar { display: none; }
+
+/* ─── Safe-area insets for notched devices ─── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@media (max-width: 640px) {
+  .brand-collapse {
+    max-width: 0;
+    opacity: 0;
+    transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease;
+  }
+  .brand-collapse-b {
+    transition-delay: 30ms;
+  }
+  .brand-gap {
+    width: 0;
+    transition-delay: 0ms;
+  }
 }

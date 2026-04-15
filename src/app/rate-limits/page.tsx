@@ -3,15 +3,15 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Rate Limits",
-  description: "Helva Cloud rate limits, usage quotas, retry guidance, and client backoff patterns.",
+  description: "HELVA CLOUD rate limits, usage quotas, retry guidance, and client backoff patterns.",
   path: "/rate-limits",
 });
 
 export default function RateLimitsPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Rate Limits"
-      description="Quota rules, burst limits, response headers, and retry guidance for Helva Cloud APIs."
+      title="HELVA CLOUD Rate Limits"
+      description="Quota rules, burst limits, response headers, and retry guidance for HELVA CLOUD APIs."
       quickAnswer="This page will document request and usage limits, rate limit headers, and recommended retry/backoff strategies."
       audience={["Developers", "Integrators", "AI coding assistants"]}
       actions={["Check request quotas", "Read limit headers", "Implement retry and backoff logic"]}

@@ -1,0 +1,13 @@
+{
+  "authResponses": [
+    {
+      "url": "http://localhost:3000/api/auth",
+      "status": 200,
+      "contentType": "application/json"
+    }
+  ],
+  "consoleErrors": [],
+  "checkInboxVisible": true,
+  "devFallbackVisible": true,
+  "errorVisible": false
+}

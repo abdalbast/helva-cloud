@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Changelog",
-  description: "Helva Cloud changelog for product, API, SDK, and documentation updates.",
+  description: "HELVA CLOUD changelog for product, API, SDK, and documentation updates.",
   path: "/changelog",
 });
 
 export default function ChangelogPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Changelog"
+      title="HELVA CLOUD Changelog"
       description="Chronological record of product, API, SDK, and documentation changes with exact dates."
-      quickAnswer="This page will publish dated Helva Cloud changes, including docs updates, API changes, and breaking changes."
+      quickAnswer="This page will publish dated HELVA CLOUD changes, including docs updates, API changes, and breaking changes."
       audience={["Developers", "Integrators", "Agents checking freshness"]}
       actions={["Check recent changes", "See breaking changes", "Track docs and API updates"]}
       relatedDocs={[

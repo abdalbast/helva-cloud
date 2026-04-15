@@ -3,16 +3,16 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Performance",
-  description: "Helva Cloud performance metrics, reliability information, and benchmark methodology.",
+  description: "HELVA CLOUD performance metrics, reliability information, and benchmark methodology.",
   path: "/performance",
 });
 
 export default function PerformancePage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Performance and Reliability"
-      description="Latency, throughput, setup time, and reliability metrics for Helva Cloud."
-      quickAnswer="This page will publish Helva Cloud performance and reliability metrics with definitions and measurement methodology."
+      title="HELVA CLOUD Performance and Reliability"
+      description="Latency, throughput, setup time, and reliability metrics for HELVA CLOUD."
+      quickAnswer="This page will publish HELVA CLOUD performance and reliability metrics with definitions and measurement methodology."
       audience={["Developers", "Technical evaluators", "Agents comparing services"]}
       actions={["Review latency and throughput", "Check benchmark methodology", "Compare reliability information"]}
       relatedDocs={[

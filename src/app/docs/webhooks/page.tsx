@@ -3,14 +3,14 @@ import { buildPageMetadata } from "@/lib/site";
 
 export const metadata = buildPageMetadata({
   title: "Webhooks",
-  description: "Webhook events, payloads, signature verification, retry behaviour, and debugging for Helva Cloud.",
+  description: "Webhook events, payloads, signature verification, retry behaviour, and debugging for HELVA CLOUD.",
   path: "/docs/webhooks",
 });
 
 export default function WebhooksPage() {
   return (
     <PlaceholderPage
-      title="Helva Cloud Webhooks"
+      title="HELVA CLOUD Webhooks"
       description="Webhook event delivery, payload examples, signature verification, and retry guidance."
       quickAnswer="This page will document webhook event types, delivery format, signature verification, and retry behaviour for event-driven workflows."
       audience={["Developers", "Automation teams", "Backend integrators"]}
