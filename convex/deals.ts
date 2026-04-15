@@ -1,67 +1,115 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getUserEmail, requireUserEmail } from "./lib/auth";
+import {
+  backfillAuthSubjectIfNeeded,
+  getViewerIdentity,
+  isOwnedByViewer,
+  mergeTenantResults,
+  requireViewerIdentity,
+  sortByCreationTime,
+} from "./lib/auth";
 
 const stageType = v.union(
-  v.literal("lead"), v.literal("qualified"), v.literal("proposal"),
-  v.literal("negotiation"), v.literal("closed_won"), v.literal("closed_lost"),
+  v.literal("lead"),
+  v.literal("qualified"),
+  v.literal("proposal"),
+  v.literal("negotiation"),
+  v.literal("closed_won"),
+  v.literal("closed_lost"),
 );
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return [];
-    const deals = await ctx.db.query("deals").withIndex("by_user", (q) => q.eq("userEmail", userEmail)).take(200);
-    const enriched = await Promise.all(
-      deals.map(async (d) => {
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return [];
+
+    const byAuthSubject = await ctx.db
+      .query("deals")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .take(200);
+
+    const deals = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("deals")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .take(200),
+        )
+      : byAuthSubject;
+
+    const sortedDeals = sortByCreationTime(deals);
+    return await Promise.all(
+      sortedDeals.map(async (deal) => {
         let companyName: string | null = null;
         let contactName: string | null = null;
-        if (d.companyId) {
-          const co = await ctx.db.get(d.companyId);
-          companyName = co?.name ?? null;
+        if (deal.companyId) {
+          const company = await ctx.db.get(deal.companyId);
+          companyName = isOwnedByViewer(company, viewer) ? company.name : null;
         }
-        if (d.contactId) {
-          const ct = await ctx.db.get(d.contactId);
-          contactName = ct ? `${ct.firstName} ${ct.lastName}` : null;
+        if (deal.contactId) {
+          const contact = await ctx.db.get(deal.contactId);
+          contactName = isOwnedByViewer(contact, viewer)
+            ? `${contact.firstName} ${contact.lastName}`
+            : null;
         }
-        return { ...d, companyName, contactName };
+        return { ...deal, companyName, contactName };
       }),
     );
-    return enriched;
   },
 });
 
 export const openCount = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return 0;
-    let n = 0;
-    for await (const d of ctx.db.query("deals").withIndex("by_user", (q) => q.eq("userEmail", userEmail))) {
-      if (d.stage !== "closed_won" && d.stage !== "closed_lost") n++;
-    }
-    return n;
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return 0;
+
+    const byAuthSubject = await ctx.db
+      .query("deals")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .collect();
+
+    const deals = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("deals")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .collect(),
+        )
+      : byAuthSubject;
+
+    return deals.filter(
+      (deal) => deal.stage !== "closed_won" && deal.stage !== "closed_lost",
+    ).length;
   },
 });
 
 export const get = query({
   args: { id: v.id("deals") },
   handler: async (ctx, { id }) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return null;
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return null;
     const deal = await ctx.db.get(id);
-    if (!deal || deal.userEmail !== userEmail) return null;
+    if (!isOwnedByViewer(deal, viewer)) return null;
+
     let companyName: string | null = null;
     let contactName: string | null = null;
     if (deal.companyId) {
-      const co = await ctx.db.get(deal.companyId);
-      companyName = co?.userEmail === userEmail ? co.name : null;
+      const company = await ctx.db.get(deal.companyId);
+      companyName = isOwnedByViewer(company, viewer) ? company.name : null;
     }
     if (deal.contactId) {
-      const ct = await ctx.db.get(deal.contactId);
-      contactName =
-        ct?.userEmail === userEmail ? `${ct.firstName} ${ct.lastName}` : null;
+      const contact = await ctx.db.get(deal.contactId);
+      contactName = isOwnedByViewer(contact, viewer)
+        ? `${contact.firstName} ${contact.lastName}`
+        : null;
     }
     return { ...deal, companyName, contactName };
   },
@@ -80,10 +128,21 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userEmail = await requireUserEmail(ctx);
-    const { title, value, stage, probability, closeDate, companyId, contactId, referredByPartnerId, notes } = args;
+    const viewer = await requireViewerIdentity(ctx);
+    const {
+      title,
+      value,
+      stage,
+      probability,
+      closeDate,
+      companyId,
+      contactId,
+      referredByPartnerId,
+      notes,
+    } = args;
     return await ctx.db.insert("deals", {
-      userEmail,
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
       title,
       value: value ?? 0,
       stage: stage ?? "lead",
@@ -110,10 +169,26 @@ export const update = mutation({
     referredByPartnerId: v.optional(v.union(v.id("partners"), v.null())),
     notes: v.optional(v.string()),
   },
-  handler: async (ctx, { id, title, value, stage, probability, closeDate, companyId, contactId, referredByPartnerId, notes }) => {
-    const userEmail = await requireUserEmail(ctx);
+  handler: async (
+    ctx,
+    {
+      id,
+      title,
+      value,
+      stage,
+      probability,
+      closeDate,
+      companyId,
+      contactId,
+      referredByPartnerId,
+      notes,
+    },
+  ) => {
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
+    await backfillAuthSubjectIfNeeded(ctx, existing, viewer);
+
     const updates: Record<string, unknown> = {};
     if (title !== undefined) updates.title = title;
     if (value !== undefined) updates.value = value;
@@ -122,9 +197,11 @@ export const update = mutation({
     if (closeDate !== undefined) updates.closeDate = closeDate;
     if (companyId !== undefined) updates.companyId = companyId;
     if (contactId !== undefined) updates.contactId = contactId;
-    if (referredByPartnerId !== undefined) updates.referredByPartnerId = referredByPartnerId;
+    if (referredByPartnerId !== undefined) {
+      updates.referredByPartnerId = referredByPartnerId;
+    }
     if (notes !== undefined) updates.notes = notes;
-    if (Object.keys(updates).length === 0) return null;
+    if (Object.keys(updates).length === 0) return await ctx.db.get(id);
     await ctx.db.patch(id, updates);
     return await ctx.db.get(id);
   },
@@ -133,9 +210,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("deals") },
   handler: async (ctx, { id }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
     await ctx.db.delete(id);
   },
 });

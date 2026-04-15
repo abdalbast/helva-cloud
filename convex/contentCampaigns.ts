@@ -1,17 +1,45 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getUserEmail, requireUserEmail } from "./lib/auth";
+import {
+  backfillAuthSubjectIfNeeded,
+  getViewerIdentity,
+  isOwnedByViewer,
+  mergeTenantResults,
+  requireViewerIdentity,
+  sortByCreationTime,
+} from "./lib/auth";
 
 const campaignStatus = v.union(
-  v.literal("draft"), v.literal("in_progress"), v.literal("published"), v.literal("completed"),
+  v.literal("draft"),
+  v.literal("in_progress"),
+  v.literal("published"),
+  v.literal("completed"),
 );
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return [];
-    return await ctx.db.query("contentCampaigns").withIndex("by_user", (q) => q.eq("userEmail", userEmail)).take(200);
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return [];
+
+    const byAuthSubject = await ctx.db
+      .query("contentCampaigns")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .take(200);
+
+    const campaigns = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("contentCampaigns")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .take(200),
+        )
+      : byAuthSubject;
+
+    return sortByCreationTime(campaigns);
   },
 });
 
@@ -25,11 +53,17 @@ export const create = mutation({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const { name, channel, brief, status, startDate, endDate } = args;
     return await ctx.db.insert("contentCampaigns", {
-      userEmail, name, channel: channel ?? null, brief: brief ?? null,
-      status: status ?? "draft", startDate: startDate ?? null, endDate: endDate ?? null,
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
+      name,
+      channel: channel ?? null,
+      brief: brief ?? null,
+      status: status ?? "draft",
+      startDate: startDate ?? null,
+      endDate: endDate ?? null,
     });
   },
 });
@@ -45,9 +79,11 @@ export const update = mutation({
     endDate: v.optional(v.string()),
   },
   handler: async (ctx, { id, name, channel, brief, status, startDate, endDate }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
+    await backfillAuthSubjectIfNeeded(ctx, existing, viewer);
+
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (channel !== undefined) updates.channel = channel;
@@ -55,7 +91,7 @@ export const update = mutation({
     if (status !== undefined) updates.status = status;
     if (startDate !== undefined) updates.startDate = startDate;
     if (endDate !== undefined) updates.endDate = endDate;
-    if (Object.keys(updates).length === 0) return null;
+    if (Object.keys(updates).length === 0) return await ctx.db.get(id);
     await ctx.db.patch(id, updates);
     return await ctx.db.get(id);
   },
@@ -64,9 +100,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("contentCampaigns") },
   handler: async (ctx, { id }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
     await ctx.db.delete(id);
   },
 });

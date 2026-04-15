@@ -1,51 +1,90 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getUserEmail, requireUserEmail } from "./lib/auth";
+import {
+  backfillAuthSubjectIfNeeded,
+  getViewerIdentity,
+  isOwnedByViewer,
+  mergeTenantResults,
+  requireViewerIdentity,
+  sortByCreationTime,
+} from "./lib/auth";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return [];
-    const contacts = await ctx.db.query("contacts").withIndex("by_user", (q) => q.eq("userEmail", userEmail)).take(200);
-    const enriched = await Promise.all(
-      contacts.map(async (c) => {
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return [];
+
+    const byAuthSubject = await ctx.db
+      .query("contacts")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .take(200);
+
+    const contacts = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("contacts")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .take(200),
+        )
+      : byAuthSubject;
+
+    const sortedContacts = sortByCreationTime(contacts);
+    return await Promise.all(
+      sortedContacts.map(async (contact) => {
         let companyName: string | null = null;
-        if (c.companyId) {
-          const company = await ctx.db.get(c.companyId);
-          companyName = company?.name ?? null;
+        if (contact.companyId) {
+          const company = await ctx.db.get(contact.companyId);
+          companyName = isOwnedByViewer(company, viewer) ? company.name : null;
         }
-        return { ...c, companyName };
+        return { ...contact, companyName };
       }),
     );
-    return enriched;
   },
 });
 
 export const count = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return 0;
-    let n = 0;
-    for await (const __ of ctx.db.query("contacts").withIndex("by_user", (q) => q.eq("userEmail", userEmail))) {
-      n++;
-    }
-    return n;
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return 0;
+
+    const byAuthSubject = await ctx.db
+      .query("contacts")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .collect();
+
+    const contacts = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("contacts")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .collect(),
+        )
+      : byAuthSubject;
+
+    return contacts.length;
   },
 });
 
 export const get = query({
   args: { id: v.id("contacts") },
   handler: async (ctx, { id }) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return null;
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return null;
     const contact = await ctx.db.get(id);
-    if (!contact || contact.userEmail !== userEmail) return null;
+    if (!isOwnedByViewer(contact, viewer)) return null;
+
     let companyName: string | null = null;
     if (contact.companyId) {
       const company = await ctx.db.get(contact.companyId);
-      companyName = company?.userEmail === userEmail ? company.name : null;
+      companyName = isOwnedByViewer(company, viewer) ? company.name : null;
     }
     return { ...contact, companyName };
   },
@@ -63,10 +102,20 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userEmail = await requireUserEmail(ctx);
-    const { firstName, lastName, email, phone, role, companyId, country, notes } = args;
+    const viewer = await requireViewerIdentity(ctx);
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      role,
+      companyId,
+      country,
+      notes,
+    } = args;
     return await ctx.db.insert("contacts", {
-      userEmail,
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
       firstName,
       lastName,
       email: email ?? null,
@@ -92,9 +141,11 @@ export const update = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, { id, firstName, lastName, email, phone, role, companyId, country, notes }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
+    await backfillAuthSubjectIfNeeded(ctx, existing, viewer);
+
     const updates: Record<string, unknown> = {};
     if (firstName !== undefined) updates.firstName = firstName;
     if (lastName !== undefined) updates.lastName = lastName;
@@ -104,7 +155,7 @@ export const update = mutation({
     if (companyId !== undefined) updates.companyId = companyId;
     if (country !== undefined) updates.country = country;
     if (notes !== undefined) updates.notes = notes;
-    if (Object.keys(updates).length === 0) return null;
+    if (Object.keys(updates).length === 0) return await ctx.db.get(id);
     await ctx.db.patch(id, updates);
     return await ctx.db.get(id);
   },
@@ -113,9 +164,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("contacts") },
   handler: async (ctx, { id }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
     await ctx.db.delete(id);
   },
 });
