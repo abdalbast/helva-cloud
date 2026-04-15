@@ -1,27 +1,34 @@
-import { auth } from "@/auth";
+import {
+  convexAuthNextjsMiddleware,
+  createRouteMatcher,
+  nextjsMiddlewareRedirect,
+} from "@convex-dev/auth/nextjs/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export default auth((req) => {
-  const { nextUrl } = req;
+const isProtectedRoute = createRouteMatcher(["/app(.*)"]);
+const isSignInRoute = createRouteMatcher(["/sign-in"]);
 
-  // Redirect www → apex (keep it simple + predictable)
-  const host = req.headers.get("host");
+export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+  const host = request.headers.get("host");
   if (host === "www.helva.cloud") {
-    const url = new URL(nextUrl.pathname + nextUrl.search, "https://helva.cloud");
-    return Response.redirect(url, 308);
+    const url = new URL(
+      request.nextUrl.pathname + request.nextUrl.search,
+      "https://helva.cloud",
+    );
+    return NextResponse.redirect(url, 308);
   }
 
-  // Protect everything under /app
-  if (nextUrl.pathname.startsWith("/app")) {
-    if (!req.auth) {
-      const url = new URL("/api/auth/signin", nextUrl.origin);
-      url.searchParams.set("callbackUrl", nextUrl.toString());
-      return Response.redirect(url);
-    }
+  if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+    return nextjsMiddlewareRedirect(request, "/sign-in");
   }
 
-  return;
+  if (isSignInRoute(request) && (await convexAuth.isAuthenticated())) {
+    return nextjsMiddlewareRedirect(request, "/app");
+  }
+
+  return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

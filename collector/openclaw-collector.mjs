@@ -32,6 +32,9 @@ function saveState() {
 }
 
 function listSessionLogs() {
+  if (!fs.existsSync(SESSIONS_DIR)) {
+    return [];
+  }
   const entries = fs.readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".jsonl"));
   // Ignore lock files / others
   return entries.map((f) => path.join(SESSIONS_DIR, f));

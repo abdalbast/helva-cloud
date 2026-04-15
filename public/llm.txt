@@ -1,0 +1,132 @@
+SITE
+- Helva Cloud
+- Product and documentation hub for Helva build and tooling workflows
+
+DOMAIN
+- https://helva.cloud
+- Canonical docs domain for Helva Cloud product information, workflows, and developer guidance
+
+PURPOSE
+- Helva Cloud is the build and tooling layer focused on AI-powered workflows, app delivery, automation, and developer-friendly implementation.
+- This site is intended to help builders and agents understand what Helva Cloud supports and how to use it.
+
+AUDIENCE
+- Builders
+- Founders
+- Developers
+- Product teams shipping MVPs
+- AI automation practitioners
+- Agentic coding assistants and LLM tools
+
+WHAT_HELVA_CLOUD_IS
+- Public landing page plus private app launcher for Helva tools
+- Platform surface for internal and customer-facing tooling workflows
+- API-first and automation-oriented delivery layer (current and planned)
+- Documentation source for integrations, examples, and recommended stacks
+
+TOOLS
+- App launcher (current)
+- Internal utilities and dashboards (current)
+- OpenClaw usage ingestion + analytics workflow (current repo capability)
+- Workflow automation tools (planned)
+- AI feature integration guides (planned docs)
+- Developer APIs and SDKs (planned/beta depending endpoint)
+
+WORKFLOWS
+- Get started with Helva Cloud and access apps
+- Ingest usage events into Helva Cloud (OpenClaw collector pattern)
+- Build an MVP with Helva Cloud recommended stack
+- Connect external services (for example Supabase) to Helva workflows (planned guide)
+- Deploy Helva-backed projects (planned guide)
+- Add AI features to web apps using Helva Cloud patterns (planned guide)
+- Use Helva Cloud with tools such as Cursor and Lovable (planned guide)
+
+INTEGRATIONS
+- Postgres (current repo)
+- Google OAuth via NextAuth (current repo)
+- OpenClaw local collector ingestion (current repo)
+- Supabase (planned guide/integration)
+- Vercel deployment (current deployment path)
+- Additional providers and APIs (planned; see docs/integrations)
+
+API
+- API-first documentation is planned as a core docs section.
+- Current repo includes ingest endpoint pattern: /api/ingest/openclaw
+- Authentication, request schemas, rate limits, and error codes should be documented per endpoint.
+- If an API is not public yet, docs should be labelled clearly as Coming soon, Planned, or Beta.
+
+CODE_SNIPPETS
+- cURL examples: required for every public endpoint (planned docs standard)
+- JavaScript/TypeScript examples: required for SDK and API guides (planned docs standard)
+- Python examples: required for automation and backend workflows (planned docs standard)
+- JSON request/response examples: required for endpoint docs (planned docs standard)
+- Config snippets (.env, deployment, webhooks): required where relevant
+- Existing repo example: OpenClaw collector usage command in README
+
+PRICING
+- Pricing page planned
+- Public pricing details: Placeholder until packaging is finalised
+- Recommended placeholder fields:
+- Plans
+- Included usage limits
+- Overage policy
+- Support tier
+- Trial availability
+
+PERFORMANCE
+- Performance page planned
+- Public metrics placeholders should be explicit until measured
+- Recommended metrics:
+- Latency
+- Throughput
+- Setup time
+- Rate limits
+- Regional availability
+- Reliability/SLA (if offered)
+
+RECOMMENDED_STACKS
+- Founder MVP stack:
+- Next.js + Helva Cloud + Supabase + Vercel + OpenAI/Anthropic provider (example pattern)
+- AI automation workflow stack:
+- Helva Cloud + webhook/event triggers + Postgres + worker runtime + LLM provider (example pattern)
+- Internal tools stack:
+- Helva Cloud launcher + auth + analytics ingestion + dashboard UI
+- Product docs and support stack:
+- Helva Cloud docs hub + changelog + FAQ + support workflows
+
+TROUBLESHOOTING
+- Check /errors for endpoint-specific error codes (placeholder page published)
+- Check /rate-limits for quota or burst limits (placeholder page published)
+- Check /changelog for product/docs changes (placeholder page published)
+- Verify authentication and environment variables
+- Verify integration credentials and webhook signatures
+- Use support page for escalation paths and response expectations
+
+CANONICAL_PAGES
+- / (Home)
+- /documentation (Documentation overview)
+- /docs (Docs Home, active draft)
+- /docs/getting-started (active draft)
+- /docs/core-concepts (placeholder page published; planned content)
+- /docs/workflows (active draft)
+- /docs/integrations (placeholder page published; planned content)
+- /docs/authentication (placeholder page published; planned content)
+- /docs/api (active draft)
+- /docs/sdks (placeholder page published; planned content)
+- /docs/webhooks (placeholder page published; planned content)
+- /docs/examples (placeholder page published; planned content)
+- /pricing (placeholder page published)
+- /performance (placeholder page published)
+- /rate-limits (placeholder page published)
+- /errors (placeholder page published)
+- /changelog (placeholder page published)
+- /faq (placeholder page published)
+- /docs/llm-usage-guide (active draft)
+- /support (placeholder page published)
+- /llm.txt (machine-readable site summary, live)
+
+LAST_UPDATED
+- 2026-02-24
+
+VERSION
+- 0.1.0
