@@ -1,13 +1,37 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getUserEmail, requireUserEmail } from "./lib/auth";
+import {
+  getViewerIdentity,
+  isOwnedByViewer,
+  mergeTenantResults,
+  requireViewerIdentity,
+  sortByCreationTime,
+} from "./lib/auth";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return [];
-    return await ctx.db.query("files").withIndex("by_user", (q) => q.eq("userEmail", userEmail)).take(200);
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return [];
+
+    const byAuthSubject = await ctx.db
+      .query("files")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .take(200);
+
+    const files = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("files")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .take(200),
+        )
+      : byAuthSubject;
+
+    return sortByCreationTime(files);
   },
 });
 
@@ -20,11 +44,16 @@ export const create = mutation({
     folder: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const { name, type, url, sizeBytes, folder } = args;
     return await ctx.db.insert("files", {
-      userEmail, name, type: type ?? null, url: url ?? null,
-      sizeBytes: sizeBytes ?? null, folder: folder ?? null,
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
+      name,
+      type: type ?? null,
+      url: url ?? null,
+      sizeBytes: sizeBytes ?? null,
+      folder: folder ?? null,
     });
   },
 });
@@ -32,9 +61,9 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id("files") },
   handler: async (ctx, { id }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
     await ctx.db.delete(id);
   },
 });

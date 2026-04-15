@@ -1,23 +1,48 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getUserEmail, requireUserEmail } from "./lib/auth";
+import {
+  backfillAuthSubjectIfNeeded,
+  getViewerIdentity,
+  isOwnedByViewer,
+  mergeTenantResults,
+  requireViewerIdentity,
+  sortByCreationTime,
+} from "./lib/auth";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return [];
-    return await ctx.db.query("meetings").withIndex("by_user", (q) => q.eq("userEmail", userEmail)).take(200);
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return [];
+
+    const byAuthSubject = await ctx.db
+      .query("meetings")
+      .withIndex("by_auth_subject", (q) =>
+        q.eq("authSubject", viewer.authSubject),
+      )
+      .take(200);
+
+    const meetings = viewer.email
+      ? mergeTenantResults(
+          byAuthSubject,
+          await ctx.db
+            .query("meetings")
+            .withIndex("by_user", (q) => q.eq("userEmail", viewer.email!))
+            .take(200),
+        )
+      : byAuthSubject;
+
+    return sortByCreationTime(meetings);
   },
 });
 
 export const get = query({
   args: { id: v.id("meetings") },
   handler: async (ctx, { id }) => {
-    const userEmail = await getUserEmail(ctx);
-    if (!userEmail) return null;
+    const viewer = await getViewerIdentity(ctx);
+    if (!viewer) return null;
     const meeting = await ctx.db.get(id);
-    if (!meeting || meeting.userEmail !== userEmail) return null;
+    if (!isOwnedByViewer(meeting, viewer)) return null;
     return meeting;
   },
 });
@@ -32,11 +57,17 @@ export const create = mutation({
     followUps: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const { title, date, attendees, notes, decisions, followUps } = args;
     return await ctx.db.insert("meetings", {
-      userEmail, title, date, attendees: attendees ?? [],
-      notes: notes ?? null, decisions: decisions ?? null, followUps: followUps ?? null,
+      authSubject: viewer.authSubject,
+      userEmail: viewer.email,
+      title,
+      date,
+      attendees: attendees ?? [],
+      notes: notes ?? null,
+      decisions: decisions ?? null,
+      followUps: followUps ?? null,
     });
   },
 });
@@ -52,9 +83,11 @@ export const update = mutation({
     followUps: v.optional(v.string()),
   },
   handler: async (ctx, { id, title, date, attendees, notes, decisions, followUps }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
+    await backfillAuthSubjectIfNeeded(ctx, existing, viewer);
+
     const updates: Record<string, unknown> = {};
     if (title !== undefined) updates.title = title;
     if (date !== undefined) updates.date = date;
@@ -62,7 +95,7 @@ export const update = mutation({
     if (notes !== undefined) updates.notes = notes;
     if (decisions !== undefined) updates.decisions = decisions;
     if (followUps !== undefined) updates.followUps = followUps;
-    if (Object.keys(updates).length === 0) return null;
+    if (Object.keys(updates).length === 0) return await ctx.db.get(id);
     await ctx.db.patch(id, updates);
     return await ctx.db.get(id);
   },
@@ -71,9 +104,9 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("meetings") },
   handler: async (ctx, { id }) => {
-    const userEmail = await requireUserEmail(ctx);
+    const viewer = await requireViewerIdentity(ctx);
     const existing = await ctx.db.get(id);
-    if (!existing || existing.userEmail !== userEmail) throw new Error("Not found");
+    if (!isOwnedByViewer(existing, viewer)) throw new Error("Not found");
     await ctx.db.delete(id);
   },
 });
