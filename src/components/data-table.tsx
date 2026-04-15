@@ -42,7 +42,14 @@ export function DataTable<T extends Record<string, unknown>>({
     ? [...data].sort((a, b) => {
         const av = a[sortKey];
         const bv = b[sortKey];
-        const cmp = av == null ? -1 : bv == null ? 1 : String(av).localeCompare(String(bv), undefined, { numeric: true });
+        const cmp =
+          av == null && bv == null
+            ? 0
+            : av == null
+              ? -1
+              : bv == null
+                ? 1
+                : String(av).localeCompare(String(bv), undefined, { numeric: true });
         return sortDir === "asc" ? cmp : -cmp;
       })
     : data;

@@ -20,8 +20,20 @@ const env = Object.fromEntries(
 );
 
 const CONVEX_URL = env["NEXT_PUBLIC_CONVEX_URL"];
-const TARGET_EMAIL = "khoshawi10@gmail.com";
-const ADMIN_SECRET = "helva-import-17faf543c87d1db0";
+const TARGET_EMAIL = env["TARGET_EMAIL"];
+const ADMIN_SECRET = env["ADMIN_IMPORT_SECRET"];
+
+if (!CONVEX_URL) {
+  throw new Error("NEXT_PUBLIC_CONVEX_URL is missing in .env.local");
+}
+
+if (!TARGET_EMAIL) {
+  throw new Error("TARGET_EMAIL is missing in .env.local");
+}
+
+if (!ADMIN_SECRET) {
+  throw new Error("ADMIN_IMPORT_SECRET is missing in .env.local");
+}
 
 console.log(`\nImporting as: ${TARGET_EMAIL}`);
 console.log(`Convex backend: ${CONVEX_URL}\n`);

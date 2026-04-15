@@ -16,7 +16,8 @@ const fields: FieldDef[] = [
 ];
 
 function formatSize(bytes: number | null | undefined) {
-  if (!bytes) return "—";
+  if (bytes == null) return "—";
+  if (bytes === 0) return "0 B";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -30,12 +31,16 @@ export default function FilesPage() {
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       await createFile({ name: formValues.name, type: formValues.type || undefined, url: formValues.url || undefined, sizeBytes: formValues.sizeBytes ? Number(formValues.sizeBytes) : undefined, folder: formValues.folder || undefined });
       setShowForm(false);
+    } catch {
+      setError("File could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -43,7 +48,12 @@ export default function FilesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this file?")) return;
-    await removeFile({ id: id as Id<"files"> });
+    setError(null);
+    try {
+      await removeFile({ id: id as Id<"files"> });
+    } catch {
+      setError("File could not be deleted. Please try again.");
+    }
   };
 
   const folders = [...new Set(files.map((f) => f.folder || "Root"))].sort();
@@ -58,6 +68,11 @@ export default function FilesPage() {
       </div>
 
       <div className="mt-6 space-y-6">
+        {error ? (
+          <div className="rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+            {error}
+          </div>
+        ) : null}
         {folders.map((folder) => (
           <div key={folder}>
             <div className="flex items-center gap-2 text-foreground/70">

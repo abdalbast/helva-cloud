@@ -41,6 +41,7 @@ export default function ActivitiesPage() {
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({ type: "note" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -53,10 +54,13 @@ export default function ActivitiesPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       await createActivity({ type: formValues.type as "call" | "email" | "meeting" | "note", subject: formValues.subject, body: formValues.body || undefined });
       setShowForm(false);
       setFormValues({ type: "note" });
+    } catch {
+      setError("Activity could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -80,6 +84,11 @@ export default function ActivitiesPage() {
       </div>
 
       <div className="mt-6 space-y-3">
+        {error ? (
+          <div className="rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+            {error}
+          </div>
+        ) : null}
         {activities.length === 0 && (
           <p className="text-body text-foreground/40">No activities yet. Log your first one!</p>
         )}

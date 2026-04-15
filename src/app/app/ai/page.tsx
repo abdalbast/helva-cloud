@@ -22,6 +22,7 @@ export default function AIPage() {
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -34,9 +35,12 @@ export default function AIPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       await createPrompt({ title: formValues.title, prompt: formValues.prompt, output: formValues.output || undefined });
       setShowForm(false);
+    } catch {
+      setError("Prompt could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,7 +48,12 @@ export default function AIPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this prompt?")) return;
-    await removePrompt({ id: id as Id<"aiPrompts"> });
+    setError(null);
+    try {
+      await removePrompt({ id: id as Id<"aiPrompts"> });
+    } catch {
+      setError("Prompt could not be deleted. Please try again.");
+    }
   };
 
   return (
@@ -57,6 +66,11 @@ export default function AIPage() {
       </div>
 
       <div className="mt-6 space-y-3">
+        {error ? (
+          <div className="rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+            {error}
+          </div>
+        ) : null}
         {prompts.length === 0 && <p className="text-body text-foreground/40">No prompts yet. Start by saving your AI prompts and outputs.</p>}
         {prompts.map((p) => (
           <div key={p._id} className="rounded-[2px] border border-foreground/10 bg-surface-pure p-4 shadow-golden">

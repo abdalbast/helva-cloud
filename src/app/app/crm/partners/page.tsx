@@ -122,6 +122,7 @@ export default function PartnersPage() {
   const [formValues, setFormValues] = useState<PartnerFormValues>({ firstName: "", lastName: "", type: "affiliate" });
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -136,9 +137,26 @@ export default function PartnersPage() {
   const filtered = filterType === "all" ? partners : partners.filter((p: Partner) => p.type === filterType);
 
   const handleSubmit = async () => {
-    if (!isPartnerType(formValues.type)) return;
+    if (!isPartnerType(formValues.type)) {
+      setError("Select a valid partner type.");
+      return;
+    }
+
+    const parsedCommissionRate =
+      formValues.commissionRate && formValues.commissionRate.trim()
+        ? Number(formValues.commissionRate)
+        : undefined;
+
+    if (
+      parsedCommissionRate !== undefined &&
+      (!Number.isFinite(parsedCommissionRate) || parsedCommissionRate < 0)
+    ) {
+      setError("Commission must be a non-negative number.");
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     try {
       const basePayload = {
         firstName: formValues.firstName,
@@ -148,7 +166,7 @@ export default function PartnersPage() {
         company: formValues.company || undefined,
         type: formValues.type,
         status: formValues.status && isPartnerStatus(formValues.status) ? formValues.status : undefined,
-        commissionRate: formValues.commissionRate ? Number(formValues.commissionRate) : undefined,
+        commissionRate: parsedCommissionRate,
         notes: formValues.notes || undefined,
       };
       if (editId) {
@@ -162,6 +180,8 @@ export default function PartnersPage() {
       }
       setShowForm(false);
       setEditId(null);
+    } catch {
+      setError("Partner could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -169,7 +189,12 @@ export default function PartnersPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this partner?")) return;
-    await removePartner({ id: id as Id<"partners"> });
+    setError(null);
+    try {
+      await removePartner({ id: id as Id<"partners"> });
+    } catch {
+      setError("Partner could not be deleted. Please try again.");
+    }
   };
 
   const openEdit = (p: Partner) => {
@@ -227,6 +252,11 @@ export default function PartnersPage() {
       </div>
 
       <div className="mt-4">
+        {error ? (
+          <div className="mb-4 rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+            {error}
+          </div>
+        ) : null}
         <DataTable
           columns={[
             ...baseColumns,
