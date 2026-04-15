@@ -10,6 +10,7 @@
 
 import type * as activities from "../activities.js";
 import type * as adminImport from "../adminImport.js";
+import type * as adminImportInternal from "../adminImportInternal.js";
 import type * as aiPrompts from "../aiPrompts.js";
 import type * as auth from "../auth.js";
 import type * as automations from "../automations.js";
@@ -39,6 +40,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activities: typeof activities;
   adminImport: typeof adminImport;
+  adminImportInternal: typeof adminImportInternal;
   aiPrompts: typeof aiPrompts;
   auth: typeof auth;
   automations: typeof automations;

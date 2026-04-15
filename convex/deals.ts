@@ -48,12 +48,21 @@ export const openCount = query({
 export const get = query({
   args: { id: v.id("deals") },
   handler: async (ctx, { id }) => {
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
     const deal = await ctx.db.get(id);
-    if (!deal) return null;
+    if (!deal || deal.userEmail !== userEmail) return null;
     let companyName: string | null = null;
     let contactName: string | null = null;
-    if (deal.companyId) { const co = await ctx.db.get(deal.companyId); companyName = co?.name ?? null; }
-    if (deal.contactId) { const ct = await ctx.db.get(deal.contactId); contactName = ct ? `${ct.firstName} ${ct.lastName}` : null; }
+    if (deal.companyId) {
+      const co = await ctx.db.get(deal.companyId);
+      companyName = co?.userEmail === userEmail ? co.name : null;
+    }
+    if (deal.contactId) {
+      const ct = await ctx.db.get(deal.contactId);
+      contactName =
+        ct?.userEmail === userEmail ? `${ct.firstName} ${ct.lastName}` : null;
+    }
     return { ...deal, companyName, contactName };
   },
 });

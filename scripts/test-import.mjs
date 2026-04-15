@@ -389,8 +389,8 @@ console.log(`Parsed ${contacts.length} unique contacts from email list\n`);
 
 // ── Load existing data ────────────────────────────────────────────────────────
 console.log("Fetching existing companies and contacts...");
-const existingCompanies = await convex.mutation(api.adminImport.listCompanies, adminArgs);
-const existingContacts = await convex.mutation(api.adminImport.listContacts, adminArgs);
+const existingCompanies = await convex.action(api.adminImport.listCompanies, adminArgs);
+const existingContacts = await convex.action(api.adminImport.listContacts, adminArgs);
 console.log(`Existing: ${existingCompanies.length} companies, ${existingContacts.length} contacts\n`);
 
 const existingEmailSet = new Set(existingContacts.map((c) => c.email?.toLowerCase()).filter(Boolean));
@@ -407,7 +407,7 @@ for (const contact of contacts) {
     if (contact.company) {
       const key = contact.company.toLowerCase();
       if (!companyCache.has(key)) {
-        const id = await convex.mutation(api.adminImport.createCompany, {
+        const id = await convex.action(api.adminImport.createCompany, {
           ...adminArgs,
           name: contact.company,
         });
@@ -416,7 +416,7 @@ for (const contact of contacts) {
       companyId = companyCache.get(key);
     }
 
-    await convex.mutation(api.adminImport.createContact, {
+    await convex.action(api.adminImport.createContact, {
       ...adminArgs,
       firstName: contact.firstName,
       lastName: contact.lastName,

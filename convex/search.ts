@@ -14,7 +14,7 @@ export const global = query({
     const [
       contactsByFirst, contactsByLast, companies, deals, activities,
       followUps, projects, tasks, meetings, socialPosts,
-      contentCampaigns, files, automations, aiPrompts, partners,
+      contentCampaigns, files, automations, aiPrompts, partnersByFirst, partnersByLast,
     ] = await Promise.all([
       ctx.db.query("contacts").withSearchIndex("search_firstName", (q) => q.search("firstName", searchTerm).eq("userEmail", userEmail)).take(5),
       ctx.db.query("contacts").withSearchIndex("search_lastName", (q) => q.search("lastName", searchTerm).eq("userEmail", userEmail)).take(5),
@@ -31,6 +31,7 @@ export const global = query({
       ctx.db.query("automations").withSearchIndex("search_name", (q) => q.search("name", searchTerm).eq("userEmail", userEmail)).take(5),
       ctx.db.query("aiPrompts").withSearchIndex("search_title", (q) => q.search("title", searchTerm).eq("userEmail", userEmail)).take(5),
       ctx.db.query("partners").withSearchIndex("search_firstName", (q) => q.search("firstName", searchTerm).eq("userEmail", userEmail)).take(5),
+      ctx.db.query("partners").withSearchIndex("search_lastName", (q) => q.search("lastName", searchTerm).eq("userEmail", userEmail)).take(5),
     ]);
 
     // Deduplicate contacts (may appear in both firstName and lastName results)
@@ -76,7 +77,10 @@ export const global = query({
     for (const p of aiPrompts) {
       results.push({ type: "ai_prompt", id: p._id, title: p.title, subtitle: undefined });
     }
-    for (const p of partners) {
+    const seenPartnerIds = new Set<string>();
+    for (const p of [...partnersByFirst, ...partnersByLast]) {
+      if (seenPartnerIds.has(p._id)) continue;
+      seenPartnerIds.add(p._id);
       results.push({ type: "partner", id: p._id, title: `${p.firstName} ${p.lastName}`, subtitle: p.type });
     }
 

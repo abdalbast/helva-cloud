@@ -19,7 +19,11 @@ export const list = query({
 export const get = query({
   args: { id: v.id("projects") },
   handler: async (ctx, { id }) => {
-    return await ctx.db.get(id);
+    const userEmail = await getUserEmail(ctx);
+    if (!userEmail) return null;
+    const project = await ctx.db.get(id);
+    if (!project || project.userEmail !== userEmail) return null;
+    return project;
   },
 });
 
