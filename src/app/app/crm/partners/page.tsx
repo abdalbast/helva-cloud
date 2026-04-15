@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { DataTable, type Column } from "@/components/data-table";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Users, DollarSign, UserCheck, Handshake } from "lucide-react";
@@ -111,11 +111,11 @@ const baseColumns: Column<Partner>[] = [
 ];
 
 export default function PartnersPage() {
-  const partners = useQuery(api.partners.list) ?? [];
-  const stats = useQuery(api.partners.stats);
-  const createPartner = useMutation(api.partners.create);
-  const updatePartner = useMutation(api.partners.update);
-  const removePartner = useMutation(api.partners.remove);
+  const partners = useAppQuery(api.partners.list, "partners") ?? [];
+  const stats = useAppQuery(api.partners.stats, { table: "partners", fn: () => ({ total: 0, active: 0, byType: {} as Record<string, number>, referredRevenue: 0 }) });
+  const createPartner = useAppMutation(api.partners.create, "partners", "create");
+  const updatePartner = useAppMutation(api.partners.update, "partners", "update");
+  const removePartner = useAppMutation(api.partners.remove, "partners", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

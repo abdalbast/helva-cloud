@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Calendar } from "lucide-react";
 
@@ -17,10 +17,10 @@ const fields: FieldDef[] = [
 ];
 
 export default function MeetingsPage() {
-  const meetings = useQuery(api.meetings.list) ?? [];
-  const createMeeting = useMutation(api.meetings.create);
-  const updateMeeting = useMutation(api.meetings.update);
-  const removeMeeting = useMutation(api.meetings.remove);
+  const meetings = useAppQuery(api.meetings.list, "meetings") ?? [];
+  const createMeeting = useAppMutation(api.meetings.create, "meetings", "create");
+  const updateMeeting = useAppMutation(api.meetings.update, "meetings", "update");
+  const removeMeeting = useAppMutation(api.meetings.remove, "meetings", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

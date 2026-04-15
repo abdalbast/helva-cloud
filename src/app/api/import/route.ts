@@ -1,20 +1,27 @@
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { ConvexHttpClient } from "convex/browser";
-import { fetchQuery, fetchMutation } from "convex/nextjs";
+import { fetchAction } from "convex/nextjs";
+import { z } from "zod";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
 import { timingSafeEqualString } from "@/lib/timing-safe";
 
-type ContactInput = {
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  role?: string;
-  company?: string;
-  country?: string;
-  notes?: string;
-};
+const ContactInputSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  role: z.string().optional(),
+  company: z.string().optional(),
+  country: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const BodySchema = z.object({
+  contacts: z.array(ContactInputSchema),
+});
+
+type ContactInput = z.infer<typeof ContactInputSchema>;
 
 function getBearerToken(req: Request) {
   const authorization = req.headers.get("authorization");
@@ -23,6 +30,18 @@ function getBearerToken(req: Request) {
   }
   const token = authorization.slice("Bearer ".length).trim();
   return token || undefined;
+}
+
+function unauthorizedResponse() {
+  return Response.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+function isImportAuthError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Unauthenticated") ||
+    message.includes("Authenticated identity is missing an email")
+  );
 }
 
 export async function POST(req: Request) {
@@ -56,29 +75,22 @@ export async function POST(req: Request) {
 
   if (!isAdminRequest) {
     if (hasAdminHeaders) {
-      return new Response(null, { status: 401 });
+      return unauthorizedResponse();
     }
     // The client can remain authenticated via Convex local storage even when the
     // server-side auth cookie is missing or stale, so accept the same-origin
     // bearer token as a fallback for import requests.
     token = getBearerToken(req) ?? (await convexAuthNextjsToken());
-    if (!token) return new Response(null, { status: 401 });
+    if (!token) return unauthorizedResponse();
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  const json = await req.json().catch(() => null);
+  const parsed = BodySchema.safeParse(json);
+  if (!parsed.success) {
+    return Response.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const contacts = (body as { contacts?: unknown } | null)?.contacts;
-
-  if (!Array.isArray(contacts)) {
-    return Response.json({ error: "`contacts` must be an array" }, { status: 400 });
-  }
-
-  const contactsInput = contacts as ContactInput[];
+  const contactsInput: ContactInput[] = parsed.data.contacts;
 
   if (contactsInput.length === 0) {
     return Response.json({ created: 0, skipped: 0, failed: 0 });
@@ -137,54 +149,18 @@ export async function POST(req: Request) {
       }
     }
   } else {
-    const opts = { token };
-    const [existingContacts, existingCompanies] = await Promise.all([
-      fetchQuery(api.contacts.list, {}, opts),
-      fetchQuery(api.companies.list, {}, opts),
-    ]);
-
-    const existingEmailSet = new Set(
-      existingContacts.map((c) => c.email?.toLowerCase()).filter(Boolean),
-    );
-    const companyCache = new Map<string, Id<"companies">>(
-      existingCompanies.map((c) => [c.name.toLowerCase(), c._id]),
-    );
-
-    for (const contact of contactsInput) {
-      try {
-        let companyId: Id<"companies"> | undefined;
-        if (contact.company) {
-          const key = contact.company.toLowerCase();
-          if (!companyCache.has(key)) {
-            const id = await fetchMutation(
-              api.companies.create,
-              { name: contact.company },
-              opts,
-            );
-            companyCache.set(key, id);
-          }
-          companyId = companyCache.get(key);
-        }
-        if (contact.email && existingEmailSet.has(contact.email.toLowerCase())) {
-          skipped++;
-          continue;
-        }
-        await fetchMutation(
-          api.contacts.create,
-          {
-            firstName: contact.firstName,
-            lastName: contact.lastName,
-            email: contact.email,
-            companyId,
-            country: contact.country,
-          },
-          opts,
-        );
-        if (contact.email) existingEmailSet.add(contact.email.toLowerCase());
-        created++;
-      } catch {
-        failed++;
+    try {
+      const result = await fetchAction(
+        api.importContacts.importMany,
+        { contacts: contactsInput },
+        { token },
+      );
+      return Response.json(result);
+    } catch (error) {
+      if (isImportAuthError(error)) {
+        return unauthorizedResponse();
       }
+      return Response.json({ error: "Import failed" }, { status: 500 });
     }
   }
 

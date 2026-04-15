@@ -3,25 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserInfo } from "@/components/user-info";
-import { SignOutButton } from "@/components/signout-button";
+import { useConvexAuth } from "convex/react";
+import { UserMenu } from "@/components/user-menu";
 
 export interface NavLinkItem {
   label: string;
   href: string;
 }
 
+function AuthSkeleton() {
+  return (
+    <div className="flex items-center gap-2 animate-pulse">
+      <div className="h-8 w-8 rounded-[2px] bg-surface-cream" />
+      <div className="hidden lg:block h-4 w-20 rounded-[1px] bg-surface-cream" />
+    </div>
+  );
+}
+
 export function SiteHeader({
   links,
-  showAuth = false,
   className = "",
 }: {
   links?: NavLinkItem[];
-  showAuth?: boolean;
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useConvexAuth();
 
   const defaultLinks: NavLinkItem[] = [
     { label: "App", href: "/app" },
@@ -56,11 +63,23 @@ export function SiteHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        {showAuth && <UserInfo />}
-        <div className="hidden lg:block">
-          <ThemeToggle />
-        </div>
-        {showAuth && <SignOutButton />}
+        {isLoading ? (
+          <AuthSkeleton />
+        ) : isAuthenticated ? (
+          <UserMenu />
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline text-[11px] uppercase tracking-wider text-foreground/35">
+              Local mode
+            </span>
+            <Link
+              href="/sign-in"
+              className="rounded-[2px] bg-mistral-orange px-3.5 py-1.5 text-sm text-white transition hover:opacity-90 active:scale-[0.98]"
+            >
+              Sign in
+            </Link>
+          </div>
+        )}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
@@ -86,10 +105,17 @@ export function SiteHeader({
               </Link>
             ))}
           </div>
-          <div className="mt-2 flex items-center justify-between border-t border-foreground/10 pt-4">
-            <span className="text-caption text-foreground/60 uppercase tracking-wider">Theme</span>
-            <ThemeToggle />
-          </div>
+          {isLoading ? null : isAuthenticated ? null : (
+            <div className="mt-3 border-t border-foreground/10 pt-3">
+              <Link
+                href="/sign-in"
+                onClick={() => setIsOpen(false)}
+                className="block rounded-[2px] bg-mistral-orange px-3 py-2.5 text-center text-sm text-white transition hover:opacity-90"
+              >
+                Sign in
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </header>

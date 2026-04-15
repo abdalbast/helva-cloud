@@ -8,6 +8,7 @@ export const me = query({
     return {
       email: identity.email ?? null,
       name: identity.name ?? null,
+      pictureUrl: identity.pictureUrl ?? null,
     };
   },
 });

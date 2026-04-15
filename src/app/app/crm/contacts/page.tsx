@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { DataTable, type Column } from "@/components/data-table";
 import { ContactFormSheet } from "@/components/contact-form-sheet";
 import { ImportDialog } from "@/components/import-dialog";
@@ -45,10 +45,10 @@ const baseColumns: Column<Contact>[] = [
 ];
 
 export default function ContactsPage() {
-  const contacts = useQuery(api.contacts.list) ?? [];
-  const createContact = useMutation(api.contacts.create);
-  const updateContact = useMutation(api.contacts.update);
-  const removeContact = useMutation(api.contacts.remove);
+  const contacts = useAppQuery(api.contacts.list, "contacts") ?? [];
+  const createContact = useAppMutation(api.contacts.create, "contacts", "create");
+  const updateContact = useAppMutation(api.contacts.update, "contacts", "update");
+  const removeContact = useAppMutation(api.contacts.remove, "contacts", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);

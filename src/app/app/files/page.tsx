@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, File, Folder, Trash2 } from "lucide-react";
 
@@ -24,9 +24,9 @@ function formatSize(bytes: number | null | undefined) {
 }
 
 export default function FilesPage() {
-  const files = useQuery(api.files.list) ?? [];
-  const createFile = useMutation(api.files.create);
-  const removeFile = useMutation(api.files.remove);
+  const files = useAppQuery(api.files.list, "files") ?? [];
+  const createFile = useAppMutation(api.files.create, "files", "create");
+  const removeFile = useAppMutation(api.files.remove, "files", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});

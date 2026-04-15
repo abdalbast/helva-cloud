@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery } from "@/lib/app-data";
 import {
   Search, User, Building2, Handshake, CheckSquare, FolderKanban,
   Calendar, Send, PenLine, File, Zap, Sparkles, Phone, Clock, Users as UsersIcon,
@@ -108,7 +108,7 @@ export function CommandPalette() {
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const searchResults = useQuery(api.search.global, query.trim() ? { query: query.trim() } : "skip") ?? [];
+  const searchResults = useAppQuery(api.search.global, { table: "*", fn: () => [] as { type: string; id: string; title: string; subtitle?: string }[] }, query.trim() ? { query: query.trim() } : "skip") ?? [];
 
   const results: SearchResult[] = searchResults.map((r: { type: string; id: string; title: string; subtitle?: string }) => ({
     type: r.type,

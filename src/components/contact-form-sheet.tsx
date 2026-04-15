@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery } from "@/lib/app-data";
 import { X, Building2, User, Mail, Phone, Briefcase, FileText, ChevronDown } from "lucide-react";
 
 type Props = {
@@ -34,7 +34,7 @@ type Props = {
 };
 
 export function ContactFormSheet({ open, editId, initialValues, onClose, onSubmit, onDelete, loading }: Props) {
-  const companies = useQuery(api.companies.list) ?? [];
+  const companies = useAppQuery(api.companies.list, "companies") ?? [];
   const [values, setValues] = useState(() => ({
     firstName: initialValues?.firstName ?? "",
     lastName: initialValues?.lastName ?? "",

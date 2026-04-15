@@ -6,12 +6,7 @@ export function isLocalSiteUrl(siteUrl?: string) {
   }
 
   try {
-    const hostname = new URL(siteUrl).hostname;
-    return (
-      hostname === "localhost" ||
-      hostname === "127.0.0.1" ||
-      hostname === "[::1]"
-    );
+    return new URL(siteUrl).hostname === "localhost";
   } catch {
     return false;
   }

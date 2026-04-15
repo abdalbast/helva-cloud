@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import type { Id } from "convex/_generated/dataModel";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, PenLine } from "lucide-react";
 
@@ -23,10 +23,10 @@ const fields: FieldDef[] = [
 ];
 
 export default function ContentPage() {
-  const campaigns = useQuery(api.contentCampaigns.list) ?? [];
-  const createCampaign = useMutation(api.contentCampaigns.create);
-  const updateCampaign = useMutation(api.contentCampaigns.update);
-  const removeCampaign = useMutation(api.contentCampaigns.remove);
+  const campaigns = useAppQuery(api.contentCampaigns.list, "contentCampaigns") ?? [];
+  const createCampaign = useAppMutation(api.contentCampaigns.create, "contentCampaigns", "create");
+  const updateCampaign = useAppMutation(api.contentCampaigns.update, "contentCampaigns", "update");
+  const removeCampaign = useAppMutation(api.contentCampaigns.remove, "contentCampaigns", "remove");
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);

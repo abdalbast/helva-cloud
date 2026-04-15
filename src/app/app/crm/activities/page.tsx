@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useAppQuery, useAppMutation } from "@/lib/app-data";
 import { FormDialog, type FieldDef } from "@/components/form-dialog";
 import { Plus, Phone, Mail, MessageSquare, FileText } from "lucide-react";
 import Link from "next/link";
@@ -35,8 +35,8 @@ const fields: FieldDef[] = [
 ];
 
 export default function ActivitiesPage() {
-  const activities = useQuery(api.activities.list) ?? [];
-  const createActivity = useMutation(api.activities.create);
+  const activities = useAppQuery(api.activities.list, "activities") ?? [];
+  const createActivity = useAppMutation(api.activities.create, "activities", "create");
 
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({ type: "note" });
