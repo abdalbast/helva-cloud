@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useConvexAuth, useAction, useQuery } from "convex/react";
 import { useAuthToken } from "@convex-dev/auth/react";
 import { api } from "convex/_generated/api";
@@ -30,6 +30,8 @@ type Props = {
 export function ImportDialog({ open, onClose }: Props) {
   const { isAuthenticated } = useConvexAuth();
   const authToken = useAuthToken();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputId = useId();
   const [activeTab, setActiveTab] = useState<Tab>("emails");
   const [pasteText, setPasteText] = useState("");
   const [emailsText, setEmailsText] = useState("");
@@ -147,6 +149,10 @@ export function ImportDialog({ open, onClose }: Props) {
     setExtracted(extracted.map(c => ({ ...c, _selected: selected })));
   };
 
+  const handleFilePick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="fixed inset-0 z-50">
       <div className="fixed inset-0 bg-foreground/30 backdrop-blur-sm animate-fade-in" onClick={onClose} />
@@ -245,7 +251,19 @@ export function ImportDialog({ open, onClose }: Props) {
                     <p className="text-caption text-foreground/60">
                       Upload a CSV or Excel file with contact data. AI will auto-map columns.
                     </p>
-                    <div className="rounded-[2px] border-2 border-dashed border-foreground/20 bg-surface-cream/30 p-8 text-center">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-controls={fileInputId}
+                      onClick={handleFilePick}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          handleFilePick();
+                        }
+                      }}
+                      className="rounded-[2px] border-2 border-dashed border-foreground/20 bg-surface-cream/30 p-8 text-center outline-none transition hover:border-mistral-orange/30 hover:bg-surface-cream/50 focus-visible:border-mistral-orange/40 focus-visible:ring-2 focus-visible:ring-mistral-orange/20"
+                    >
                       <Upload className="mx-auto h-8 w-8 text-foreground/40" />
                       <p className="mt-2 text-sm text-foreground/60">
                         Drag and drop a file here, or click to browse
@@ -253,7 +271,12 @@ export function ImportDialog({ open, onClose }: Props) {
                       <p className="text-caption text-foreground/40 mt-1">
                         CSV, Excel (.xlsx, .xls) supported
                       </p>
+                      {file ? (
+                        <p className="mt-3 text-sm text-foreground">{file.name}</p>
+                      ) : null}
                       <input
+                        id={fileInputId}
+                        ref={fileInputRef}
                         type="file"
                         accept=".csv,.xlsx,.xls"
                         onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -292,7 +315,13 @@ export function ImportDialog({ open, onClose }: Props) {
               <div className="border-t border-foreground/10 p-4">
                 <button
                   onClick={handleParse}
-                  disabled={loading || (activeTab === "emails" && !emailsText.trim()) || (activeTab === "paste" && !pasteText.trim()) || (activeTab === "url" && !url.trim())}
+                  disabled={
+                    loading ||
+                    (activeTab === "emails" && !emailsText.trim()) ||
+                    (activeTab === "paste" && !pasteText.trim()) ||
+                    (activeTab === "url" && !url.trim()) ||
+                    (activeTab === "file" && !file)
+                  }
                   className="w-full rounded-[2px] bg-mistral-orange px-4 py-2 text-sm text-surface-pure hover:bg-mistral-flame active:scale-[0.98] transition disabled:opacity-50"
                 >
                   {loading ? (

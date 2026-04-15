@@ -45,6 +45,7 @@ export default function BoardPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string>>({ status: "todo", priority: "medium" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const fields = useFields(projects);
 
@@ -60,6 +61,7 @@ export default function BoardPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       const status = formValues.status as "backlog" | "todo" | "in_progress" | "review" | "done";
       const priority = formValues.priority as "low" | "medium" | "high" | "urgent";
@@ -70,6 +72,8 @@ export default function BoardPage() {
       }
       setShowForm(false);
       setEditId(null);
+    } catch {
+      setError("Task could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -97,6 +101,11 @@ export default function BoardPage() {
         </button>
       </div>
 
+      {error ? (
+        <div className="mt-6 rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+          {error}
+        </div>
+      ) : null}
       <div className="nav-scroll mt-6 grid auto-cols-[minmax(200px,1fr)] grid-flow-col gap-4 pb-2 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-2 lg:grid-cols-5">
         {byColumn.map(({ status, tasks: colTasks }) => (
           <div key={status} className="rounded-[2px] border border-foreground/10 bg-surface-cream/30 p-3">

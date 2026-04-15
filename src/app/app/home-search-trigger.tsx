@@ -7,7 +7,7 @@ export function HomeSearchTrigger() {
     <button
       type="button"
       onClick={() => {
-        document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }));
       }}
       aria-label="Search tools, projects, clients and notes"
       className="group flex w-full items-center gap-3 rounded-[2px] border border-sunshine-700/20 bg-surface-pure px-4 py-3 text-left shadow-golden backdrop-blur transition hover:border-mistral-orange/30 hover:bg-surface-cream active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mistral-orange/30"

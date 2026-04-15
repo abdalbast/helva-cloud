@@ -18,7 +18,6 @@ export function isLocalSiteUrl(siteUrl?: string) {
 }
 
 export function resolveMagicLinkSender({
-  siteUrl,
   authEmailFrom,
 }: {
   siteUrl?: string;
@@ -26,10 +25,6 @@ export function resolveMagicLinkSender({
 }) {
   if (authEmailFrom?.trim()) {
     return authEmailFrom.trim();
-  }
-
-  if (isLocalSiteUrl(siteUrl)) {
-    return DEFAULT_MAGIC_LINK_FROM;
   }
 
   return DEFAULT_MAGIC_LINK_FROM;

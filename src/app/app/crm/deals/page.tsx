@@ -53,6 +53,7 @@ export default function DealsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<DealFormValues>({ title: "", stage: "lead" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function DealsPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       const payload = { ...formValues, value: formValues.value ? Number(formValues.value) : undefined, probability: formValues.probability ? Number(formValues.probability) : undefined };
       if (editId) {
@@ -75,6 +77,8 @@ export default function DealsPage() {
       }
       setShowForm(false);
       setEditId(null);
+    } catch {
+      setError("Deal could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -95,7 +99,12 @@ export default function DealsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this deal?")) return;
-    await removeDeal({ id: id as Id<"deals"> });
+    setError(null);
+    try {
+      await removeDeal({ id: id as Id<"deals"> });
+    } catch {
+      setError("Deal could not be deleted. Please try again.");
+    }
   };
 
   const byStage = STAGES.map((stage) => ({
@@ -121,6 +130,11 @@ export default function DealsPage() {
         </div>
       </div>
 
+      {error ? (
+        <div className="mt-6 rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+          {error}
+        </div>
+      ) : null}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {byStage.map(({ stage, deals: stageDeals, total }) => (
           <div key={stage} className="rounded-[2px] border border-foreground/10 bg-surface-cream/30 p-3">

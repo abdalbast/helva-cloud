@@ -41,6 +41,7 @@ export default function FollowUpsPage() {
   const [showForm, setShowForm] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({ status: "pending" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -53,17 +54,25 @@ export default function FollowUpsPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError(null);
     try {
       await createFollowUp({ description: formValues.description, dueAt: formValues.dueAt, status: formValues.status as "pending" | "done" | "snoozed" });
       setShowForm(false);
       setFormValues({ status: "pending" });
+    } catch {
+      setError("Follow-up could not be saved. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const updateStatus = async (id: string, status: string) => {
-    await updateFollowUp({ id: id as Id<"followUps">, status: status as "pending" | "done" | "snoozed" });
+    setError(null);
+    try {
+      await updateFollowUp({ id: id as Id<"followUps">, status: status as "pending" | "done" | "snoozed" });
+    } catch {
+      setError("Follow-up status could not be updated. Please try again.");
+    }
   };
 
   const filtered = filter === "all" ? followUps : followUps.filter((f) => f.status === filter);
@@ -98,6 +107,11 @@ export default function FollowUpsPage() {
       </div>
 
       <div className="mt-4 space-y-2">
+        {error ? (
+          <div className="rounded-[2px] border border-mistral-orange/20 bg-mistral-orange/10 px-3 py-2 text-sm text-mistral-orange">
+            {error}
+          </div>
+        ) : null}
         {filtered.length === 0 && (
           <p className="text-body text-foreground/40">No follow-ups.</p>
         )}

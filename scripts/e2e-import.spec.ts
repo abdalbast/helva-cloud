@@ -6,6 +6,16 @@
 import { test, expect } from "@playwright/test";
 
 const BASE_URL = "http://localhost:3000";
+const ADMIN_SECRET = process.env.ADMIN_IMPORT_SECRET;
+const TARGET_EMAIL = process.env.TARGET_EMAIL;
+
+if (!ADMIN_SECRET) {
+  throw new Error("ADMIN_IMPORT_SECRET is required to run scripts/e2e-import.spec.ts");
+}
+
+if (!TARGET_EMAIL) {
+  throw new Error("TARGET_EMAIL is required to run scripts/e2e-import.spec.ts");
+}
 
 const EMAILS = `dashne.jalal@auis.edu.krd
 albaqqal@emirates.ae
@@ -299,9 +309,6 @@ gokhan.sagme@cihanbank.com.iq
 ahmad@beppco.com
 it@beppco.com
 htalabani@yahoo.com`;
-
-const ADMIN_SECRET = "helva-import-17faf543c87d1db0";
-const TARGET_EMAIL = "khoshawi10@gmail.com";
 
 test("import contacts via UI dialog", async ({ page }) => {
   // Collect console errors
