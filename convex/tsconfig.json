@@ -12,6 +12,9 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
 
+    /* vite/client provides import.meta.glob types used in *.test.ts files */
+    "types": ["vite/client"],
+
     /* These compiler options are required by Convex */
     "target": "ESNext",
     "lib": ["ES2023", "dom"],
